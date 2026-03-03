@@ -1,3 +1,3 @@
-# Waypoint
+# Shift
 
 A cab booking platform.
