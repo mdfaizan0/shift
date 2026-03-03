@@ -1,9 +1,56 @@
 import { supabase } from "../config/supabase.js"
 import { razorpay } from "../config/razorpay.js"
 
+export async function estimateRide(req, res) {
+    const { pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body
+
+    if (!pickup_lat || !pickup_lng || !dropoff_lat || !dropoff_lng) {
+        return res.status(400).json({ success: false, message: "Pickup and drop coordinates are required" });
+    }
+
+    try {
+        const { data, error } = await supabase.rpc("calculate_fare", {
+            pickup_lat,
+            pickup_lng,
+            drop_lat: dropoff_lat,
+            drop_lng: dropoff_lng
+        });
+
+        if (error || !data || !data.length) {
+            console.error("Error estimating fare:", error);
+            return res.status(500).json({ success: false, message: "Failed to estimate fare" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fare estimated successfully",
+            estimate: data[0]
+        });
+
+    } catch (error) {
+        console.error("Error estimating fare:", error);
+        return res.status(500).json({ success: false, message: "Error estimating fare", error: error.message });
+    }
+}
+
 export async function createRide(req, res) {
     const { rider_id, pickup_location, dropoff_location, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body
+
     try {
+        const { data: fareData, error: fareError } = await supabase.rpc("calculate_fare", {
+            pickup_lat,
+            pickup_lng,
+            drop_lat: dropoff_lat,
+            drop_lng: dropoff_lng
+        });
+
+        if (fareError || !fareData || !fareData.length) {
+            console.error("Error calculating fare:", fareError);
+            return res.status(500).json({ success: false, message: "Failed to calculate fare" });
+        }
+
+        const estimatedFare = fareData[0].estimated_fare;
+
         const { data, error } = await supabase
             .from('rides')
             .insert({
@@ -14,18 +61,22 @@ export async function createRide(req, res) {
                 pickup_lng,
                 dropoff_lat,
                 dropoff_lng,
-                fare: Math.floor(Math.random() * 1000) + 100,
+                fare: estimatedFare
             })
             .select()
-            .single()
-
+            .single();
 
         if (error) {
-            console.error("Error creating ride:", error)
-            return res.status(500).json({ success: false, message: "Failed to create ride" })
+            console.error("Error creating ride:", error);
+            return res.status(500).json({ success: false, message: "Failed to create ride" });
         }
 
-        return res.status(200).json({ success: true, message: "Ride created successfully", ride: data })
+        return res.status(200).json({
+            success: true,
+            message: "Ride created successfully",
+            ride: data
+        });
+
     } catch (error) {
         console.error("Error creating ride:", error);
         return res.status(500).json({ success: false, message: "Error creating ride", error: error.message });

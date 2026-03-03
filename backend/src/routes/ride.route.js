@@ -4,6 +4,7 @@ import { authMiddleware, isDriver } from "../middlewares/auth.middleware.js";
 
 const router = express.Router()
 
+router.post('/estimate', rideController.estimateRide);
 router.post('/', authMiddleware, rideController.createRide);
 router.post('/:id/search', authMiddleware, rideController.searchRide);
 router.post('/:id/accept', authMiddleware, isDriver, rideController.acceptRide);
