@@ -8,4 +8,6 @@ router.post("/go-online", authMiddleware, isDriver, driverController.goOnline)
 router.post("/go-offline", authMiddleware, isDriver, driverController.goOffline)
 router.post("/location-update", authMiddleware, isDriver, driverController.locationUpdate)
 
+router.get("/earnings", authMiddleware, isDriver, driverController.getDriverEarnings)
+
 export default router

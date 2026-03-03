@@ -19,4 +19,6 @@ router.post('/:id/mark-paid', authMiddleware, isDriver, rideController.markAsPai
 router.post('/:id/cancel', authMiddleware, rideController.cancelRide);
 router.post("/:id/review", authMiddleware, rideController.reviewRide)
 
+router.get("/history", authMiddleware, rideController.getRideHistory)
+
 export default router;

@@ -697,3 +697,48 @@ export async function reviewRide(req, res) {
         return res.status(500).json({ success: false, message: "Failed to review ride", error: error.message })
     }
 }
+
+export async function getRideHistory(req, res) {
+    const { as: role } = req.query
+    const userId = req.user.id
+
+    if (!["rider", "driver"].includes(role)) {
+        return res.status(400).json({ success: false, message: "Query parameter 'as' must be either 'rider' or 'driver'" })
+    }
+
+    try {
+        let query = supabase
+            .from("rides")
+            .select(`
+                id,
+                pickup_location,
+                dropoff_location,
+                fare,
+                status,
+                payment_status,
+                created_at,
+                completed_at,
+                cancelled_at
+            `)
+            .in("status", ["COMPLETED", "CANCELLED"])
+            .order("created_at", { ascending: false })
+
+        if (role === "rider") {
+            query = query.eq("rider_id", userId)
+        } else {
+            query = query.eq("driver_id", userId)
+        }
+
+        const { data: rides, error: ridesError } = await query
+
+        if (ridesError) {
+            console.error("Error fetching ride history:", ridesError)
+            return res.status(500).json({ success: false, message: "Failed to fetch ride history" })
+        }
+
+        return res.status(200).json({ success: true, message: "Ride history fetched successfully", count: rides.length, rides })
+    } catch (error) {
+        console.error("Error fetching ride history:", error)
+        return res.status(500).json({ success: false, message: "Failed to fetch ride history", error: error.message })
+    }
+}

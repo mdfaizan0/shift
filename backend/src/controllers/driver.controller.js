@@ -110,3 +110,75 @@ export async function locationUpdate(req, res) {
         return res.status(500).json({ success: false, message: "Failed to update driver location" })
     }
 }
+
+export async function getDriverEarnings(req, res) {
+    const userId = req.user.id
+
+    try {
+        const today = new Date()
+        const startOfDay = new Date(today.setHours(0, 0, 0, 0))
+
+        const startOfMonth = new Date()
+        startOfMonth.setDate(1)
+        startOfMonth.setHours(0, 0, 0, 0)
+
+        const { data: rides, error: ridesError } = await supabase
+            .from("rides")
+            .select("fare, completed_at")
+            .eq("driver_id", userId)
+            .eq("status", "COMPLETED")
+            .eq("payment_status", "PAID")
+
+        if (ridesError) {
+            console.log("Error fetching driver earnings:", ridesError)
+            return res.status(500).json({ success: false, message: "Failed to fetch driver earnings" })
+        }
+
+        if (!rides || rides.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "Driver earnings fetched successfully",
+                earnings: {
+                    total_earnings: 0,
+                    today_earnings: 0,
+                    month_earnings: 0,
+                    total_completed_rides: 0
+                },
+            })
+        }
+
+        const totalCompletedRides = rides.length
+
+        let totalEarnings = 0
+        let todayEarnings = 0
+        let monthEarnings = 0
+
+        for (let ride of rides) {
+            totalEarnings += Number(ride.fare)
+
+            const rideDate = new Date(ride.completed_at)
+
+            if (rideDate >= startOfDay) {
+                todayEarnings += Number(ride.fare)
+            }
+
+            if (rideDate >= startOfMonth) {
+                monthEarnings += Number(ride.fare)
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Driver earnings fetched successfully",
+            earnings: {
+                total_earnings: totalEarnings,
+                today_earnings: todayEarnings,
+                month_earnings: monthEarnings,
+                total_completed_rides: totalCompletedRides
+            },
+        })
+    } catch (error) {
+        console.log("Error fetching driver earnings:", error)
+        return res.status(500).json({ success: false, message: "Failed to fetch driver earnings" })
+    }
+}
