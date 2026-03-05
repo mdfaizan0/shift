@@ -33,7 +33,7 @@ export default function RootLayout({
         <html lang="en">
           <head>
             <meta name="apple-mobile-web-app-title" content="Shift" />
-            <meta name="apple-mobile-web-app-capable" content="yes" />
+            <meta name="mobile-web-app-capable" content="yes" />
             <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
             <link rel="manifest" href="/manifest.json" />
           </head>

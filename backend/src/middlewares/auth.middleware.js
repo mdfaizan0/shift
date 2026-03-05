@@ -1,7 +1,8 @@
 import { supabase } from "../config/supabase.js"
 
 export const authMiddleware = async (req, res, next) => {
-    const { userId } = req.auth
+    const auth = await req.auth()
+    const userId = auth?.userId
     if (!userId) {
         return res.status(401).json({ success: false, message: "Unauthorized" })
     }
