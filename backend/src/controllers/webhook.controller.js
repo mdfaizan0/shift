@@ -1,6 +1,6 @@
 import crypto from "crypto"
 import { supabase } from "../config/supabase.js"
-import { verifyWebhook } from "@clerk/backend/webhooks"
+import { Webhook } from "svix"
 
 export async function handleRazorpayWebhook(req, res) {
     const signature = req.headers["x-razorpay-signature"]
@@ -60,26 +60,49 @@ export async function handleRazorpayWebhook(req, res) {
 }
 
 export async function handleClerkWebhook(req, res) {
+    const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET
+
+    if (!CLERK_WEBHOOK_SIGNING_SECRET) {
+        console.error("Missing CLERK_WEBHOOK_SIGNING_SECRET")
+        return res.status(500).json({ success: false, message: "Server configuration error" })
+    }
+
+    const svix_id = req.headers["svix-id"]
+    const svix_timestamp = req.headers["svix-timestamp"]
+    const svix_signature = req.headers["svix-signature"]
+
+    if (!svix_id || !svix_timestamp || !svix_signature) {
+        return res.status(400).json({ success: false, message: "Error occured -- no svix headers" })
+    }
+
+    const payload = req.body.toString()
+
+    const wh = new Webhook(CLERK_WEBHOOK_SIGNING_SECRET)
+
+    let evt
+
     try {
-        const event = await verifyWebhook(req, {
-            signingSecret: process.env.CLERK_WEBHOOK_SIGNING_SECRET,
+        evt = wh.verify(payload, {
+            "svix-id": svix_id,
+            "svix-timestamp": svix_timestamp,
+            "svix-signature": svix_signature,
         })
+    } catch (err) {
+        console.error("Error verifying webhook:", err.message)
+        return res.status(400).json({ success: false, message: "Error verifying webhook" })
+    }
 
-        if (!event) {
-            return res.status(400).json({ success: false, message: "Invalid webhook signature" })
-        }
+    const eventType = evt.type
 
-        const eventType = event.type
-        const payload = event.data
-
+    try {
         if (eventType === "user.created") {
-            const { id, email_addresses, first_name, last_name } = payload
+            const { id, email_addresses, first_name, last_name, username } = evt.data
             const { error } = await supabase
                 .from("users")
                 .upsert({
                     id,
                     email: email_addresses?.[0]?.email_address,
-                    name: `${first_name || ""} ${last_name || ""}`.trim() || payload.username || "User",
+                    name: `${first_name || ""} ${last_name || ""}`.trim() || username || "User",
                     role: "RIDER"
                 })
             if (error) {
@@ -89,12 +112,12 @@ export async function handleClerkWebhook(req, res) {
         }
 
         if (eventType === "user.updated") {
-            const { id, email_addresses, first_name, last_name } = payload
+            const { id, email_addresses, first_name, last_name, username } = evt.data
             const { error } = await supabase
                 .from("users")
                 .update({
-                    email: email_addresses[0].email_address,
-                    name: `${first_name || ""} ${last_name || ""}`.trim() || payload.username || "User",
+                    email: email_addresses?.[0]?.email_address,
+                    name: `${first_name || ""} ${last_name || ""}`.trim() || username || "User",
                 })
                 .eq("id", id)
             if (error) {
@@ -104,7 +127,7 @@ export async function handleClerkWebhook(req, res) {
         }
 
         if (eventType === "user.deleted") {
-            const { id } = payload
+            const { id } = evt.data
             const { error } = await supabase
                 .from("users")
                 .delete()
@@ -117,7 +140,7 @@ export async function handleClerkWebhook(req, res) {
 
         return res.status(200).json({ success: true, message: "Webhook processed successfully" })
     } catch (error) {
-        console.error("Error in webhook controller:", error)
+        console.error("Error in webhook controller logic:", error)
         return res.status(500).json({ success: false, message: "Webhook processing failed" })
     }
 }

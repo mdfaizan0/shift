@@ -1,5 +1,5 @@
-// For adding custom fonts with other frameworks, see:
-// https://tailwindcss.com/docs/font-family
+import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/features/auth/AuthProvider";
 import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
@@ -28,10 +28,20 @@ export default function RootLayout({
   children,
 }) {
   return (
-    <html lang="en">
-      <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <AuthProvider>
+        <html lang="en">
+          <head>
+            <meta name="apple-mobile-web-app-title" content="Shift" />
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+            <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+            <link rel="manifest" href="/manifest.json" />
+          </head>
+          <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
+            {children}
+          </body>
+        </html>
+      </AuthProvider>
+    </ClerkProvider>
   );
 }
