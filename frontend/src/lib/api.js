@@ -15,6 +15,8 @@ export function setTokenGetter(getToken) {
     _getToken = getToken;
 }
 
+import { toast } from "sonner";
+
 // Request interceptor — attaches Clerk JWT to every outgoing request
 api.interceptors.request.use(async (config) => {
     if (_getToken) {
@@ -26,14 +28,30 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
-// Response interceptor — handles unauthorized errors
+// Response interceptor — handles toasts and unauthorized errors
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        const { config } = response;
+
+        if (config.showToast && response.data?.success && response.data?.message) {
+            toast.success(response.data.message);
+        }
+
+        return response;
+    },
     (error) => {
+        const { config } = error;
+
         if (error.response?.status === 401) {
             console.error("Unauthorized request, clearing session...");
-            // Optionally handle redirect to login here if not handled by Clerk
         }
+
+        const shouldSkip = config?.skipToast;
+        if (!shouldSkip) {
+            const message = error.response?.data?.message || "Something went wrong";
+            toast.error(message);
+        }
+
         return Promise.reject(error);
     }
 );

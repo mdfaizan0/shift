@@ -47,7 +47,7 @@ const UserMenu = ({ user, signOut }) => (
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:text-destructive"
+                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                 onClick={() => signOut({ redirectUrl: '/login' })}
             >
                 <LogOut className="mr-2 h-4 w-4" />
@@ -72,7 +72,7 @@ const Navbar = () => {
                     <div className="flex items-center gap-8">
                         <Link href="/" className="flex items-center space-x-2">
                             <Image
-                                src="/logo.png"
+                                src="/logo-new.png"
                                 alt="Shift Logo"
                                 width={120}
                                 height={40}

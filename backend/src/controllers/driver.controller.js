@@ -201,7 +201,7 @@ export async function getDriverProfile(req, res) {
             return res.status(404).json({ success: false, message: "Driver not found" })
         }
 
-        return res.status(200).json({ success: true, driver })
+        return res.status(200).json({ success: true, message: "Driver profile fetched successfully", driver })
     } catch (error) {
         console.log("Error fetching driver profile:", error)
         return res.status(500).json({ success: false, message: "Failed to fetch driver profile" })

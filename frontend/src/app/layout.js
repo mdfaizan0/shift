@@ -4,6 +4,7 @@ import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
+import { Toaster } from "@/components/ui/sonner";
 import AppLayout from "@/components/layout/AppLayout";
 
 const fontSans = Inter({
@@ -43,6 +44,7 @@ export default function RootLayout({
             <AppLayout>
               {children}
             </AppLayout>
+            <Toaster />
           </body>
         </html>
       </AuthProvider>

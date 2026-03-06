@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Register the token getter with the Axios interceptor once on mount
     useEffect(() => {
         setTokenGetter(getToken);
     }, [getToken]);
