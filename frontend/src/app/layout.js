@@ -4,6 +4,8 @@ import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
+import AppLayout from "@/components/layout/AppLayout";
+
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -38,7 +40,9 @@ export default function RootLayout({
             <link rel="manifest" href="/manifest.json" />
           </head>
           <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
-            {children}
+            <AppLayout>
+              {children}
+            </AppLayout>
           </body>
         </html>
       </AuthProvider>

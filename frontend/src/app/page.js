@@ -2,10 +2,10 @@
 
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserButton } from "@clerk/nextjs";
 import MapContainer from "@/features/map/MapContainer";
 import { createMarker } from "@/utils/map.utils";
 import { MAP_CONFIG } from "@/features/map/map.constants";
+import Container from "@/components/layout/Container";
 
 export default function Home() {
   const { user, role, isLoading } = useAuthUser();
@@ -17,39 +17,30 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-8 text-center bg-background text-foreground">
+      <Container className="py-8 text-center">
         <main className="max-w-4xl w-full mx-auto space-y-6 flex flex-col items-center">
           <Skeleton className="h-12 w-48" />
           <Skeleton className="h-6 w-80" />
           <Skeleton className="h-[400px] w-full rounded-xl" />
         </main>
-      </div>
+      </Container>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 text-center bg-background text-foreground">
-      {user && (
-        <div className="absolute top-8 right-8">
-          <UserButton afterSignOutUrl="/login" />
-        </div>
-      )}
+    <Container className="py-8 text-center">
       <main className="max-w-4xl w-full mx-auto space-y-8">
         <div className="space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Shift
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Real-time ride hailing platform
-          </p>
           {user ? (
-            <p className="text-lg font-medium text-primary">
-              Welcome back, {user.name}! (Role: {role})
-            </p>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight">Welcome back, {user.name}!</h2>
+              <p className="text-lg text-muted-foreground">You are currently logged in as a <span className="text-primary font-semibold">{role}</span></p>
+            </div>
           ) : (
-            <p className="text-lg text-muted-foreground">
-              Please sign in to continue
-            </p>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight">Real-time ride hailing platform</h2>
+              <p className="text-lg text-muted-foreground">Please sign in to continue</p>
+            </div>
           )}
         </div>
 
@@ -57,6 +48,6 @@ export default function Home() {
           <MapContainer markers={demoMarkers} />
         </div>
       </main>
-    </div>
+    </Container>
   );
 }

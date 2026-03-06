@@ -2,7 +2,6 @@
 
 import React, { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
 import { configureLeafletIcons } from "@/lib/leaflet";
 import { MAP_CONFIG } from "@/features/map/map.constants";
 
