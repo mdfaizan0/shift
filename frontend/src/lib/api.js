@@ -26,4 +26,16 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
+// Response interceptor — handles unauthorized errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.error("Unauthorized request, clearing session...");
+            // Optionally handle redirect to login here if not handled by Clerk
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

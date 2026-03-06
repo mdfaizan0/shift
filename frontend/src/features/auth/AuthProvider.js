@@ -27,8 +27,14 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await api.get("/users/me");
             if (response.data.success) {
-                setUser(response.data.user);
-                setRole(response.data.user.role);
+                const userData = response.data.user;
+                setUser({
+                    id: userData.id,
+                    name: userData.name,
+                    email: userData.email,
+                    imageUrl: userData.imageUrl || null
+                });
+                setRole(userData.role);
             }
         } catch (error) {
             console.error("Error fetching user profile:", error);
