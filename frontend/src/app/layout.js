@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
 import AppLayout from "@/components/layout/AppLayout";
 
 const fontSans = Inter({
@@ -33,7 +34,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <AuthProvider>
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
           <head>
             <meta name="apple-mobile-web-app-title" content="Shift" />
             <meta name="mobile-web-app-capable" content="yes" />
@@ -41,10 +42,12 @@ export default function RootLayout({
             <link rel="manifest" href="/manifest.json" />
           </head>
           <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
-            <AppLayout>
-              {children}
-            </AppLayout>
-            <Toaster />
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+              <AppLayout>
+                {children}
+              </AppLayout>
+              <Toaster />
+            </ThemeProvider>
           </body>
         </html>
       </AuthProvider>

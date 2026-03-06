@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import { configureLeafletIcons } from "@/lib/leaflet";
 import { MAP_CONFIG } from "@/features/map/map.constants";
+import { useTheme } from "next-themes";
 
 // Configure icons on initialization
 configureLeafletIcons();
@@ -31,8 +32,17 @@ const MapView = ({
     markers = [],
     className = "h-full w-full"
 }) => {
+    const { resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
+    const isDark = mounted && resolvedTheme === "dark";
+
     return (
-        <div className={className}>
+        <div
+            className={className}
+            style={isDark ? { filter: "invert(90%) hue-rotate(160deg)" } : undefined}
+        >
             <MapContainer
                 center={center}
                 zoom={zoom}
