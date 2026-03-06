@@ -30,7 +30,8 @@ const MapView = ({
     center = MAP_CONFIG.DEFAULT_CENTER,
     zoom = MAP_CONFIG.DEFAULT_ZOOM,
     markers = [],
-    className = "h-full w-full"
+    className = "h-full w-full",
+    children
 }) => {
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -62,6 +63,8 @@ const MapView = ({
                         position={[marker.lat, marker.lng]}
                     />
                 ))}
+
+                {children}
             </MapContainer>
         </div>
     );
