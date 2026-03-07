@@ -44,6 +44,10 @@ api.interceptors.response.use(
 
         if (error.response?.status === 401) {
             console.error("Unauthorized request, clearing session...");
+            // Fire and forget offline request if it was likely a driver session
+            // We use a raw fetch to avoid axios interceptor looping
+            const baseUrl = ENV.API_BASE_URL;
+            fetch(`${baseUrl}/api/driver/go-offline`, { method: 'POST' }).catch(() => { });
         }
 
         const shouldSkip = config?.skipToast;

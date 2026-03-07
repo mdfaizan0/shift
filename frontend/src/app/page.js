@@ -8,6 +8,7 @@ import { MAP_CONFIG } from "@/features/map/map.constants";
 import Container from "@/components/layout/Container";
 import AuthGuard from "@/components/auth/AuthGuard";
 import RiderDashboard from "@/features/rider/RiderDashboard";
+import DriverDashboard from "@/features/driver/DriverDashboard";
 
 export default function Home() {
   const { user, role, isLoading } = useAuthUser();
@@ -20,15 +21,7 @@ export default function Home() {
     }
 
     if (role === "DRIVER") {
-      return (
-        <div className="py-20 text-center space-y-4">
-          <h2 className="text-3xl font-bold tracking-tight text-primary">Driver Dashboard</h2>
-          <p className="text-xl text-muted-foreground max-w-lg mx-auto">
-            Welcome, captain! Your dashboard is currently being prepared for the next haul.
-            Stay tuned for real-time ride requests and earnings overview.
-          </p>
-        </div>
-      );
+      return <DriverDashboard />;
     }
 
     // Fallback for missing/unknown role

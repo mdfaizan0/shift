@@ -207,3 +207,27 @@ export async function getDriverProfile(req, res) {
         return res.status(500).json({ success: false, message: "Failed to fetch driver profile" })
     }
 }
+
+export async function toggleAvailability(req, res) {
+    const userId = req.user.id
+    try {
+        const { data, error } = await supabase
+            .rpc("toggle_driver_availability", { driver_user_id: userId })
+            .select()
+            .single()
+
+        if (error) {
+            console.log("Error updating driver availability:", error)
+            return res.status(500).json({ success: false, message: "Failed to update driver availability" })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: data ? "Driver is now available" : "Driver is now unavailable",
+            is_available: data
+        })
+    } catch (error) {
+        console.log("Error updating driver availability:", error)
+        return res.status(500).json({ success: false, message: "Failed to update driver availability" })
+    }
+}

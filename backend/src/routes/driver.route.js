@@ -7,6 +7,7 @@ const router = express.Router()
 
 router.post("/go-online", requireAuth(), authMiddleware, isDriver, driverController.goOnline)
 router.post("/go-offline", requireAuth(), authMiddleware, isDriver, driverController.goOffline)
+router.post("/toggle", requireAuth(), authMiddleware, isDriver, driverController.toggleAvailability)
 router.post("/location-update", requireAuth(), authMiddleware, isDriver, driverController.locationUpdate)
 
 router.get("/earnings", requireAuth(), authMiddleware, isDriver, driverController.getDriverEarnings)

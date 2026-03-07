@@ -16,7 +16,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, LogOut, User, Map as MapIcon, Sun, Moon } from "lucide-react";
+import { Menu, LogOut, User, Map as MapIcon, Sun, Moon, Car } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
@@ -41,7 +41,7 @@ const ThemeToggle = () => {
     );
 };
 
-const UserMenu = ({ user, signOut }) => (
+const UserMenu = ({ user, role, handleSignOut }) => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -67,10 +67,18 @@ const UserMenu = ({ user, signOut }) => (
                     <span>Profile</span>
                 </Link>
             </DropdownMenuItem>
+            {role !== "DRIVER" && (
+                <DropdownMenuItem asChild>
+                    <Link href="/become-a-driver" className="cursor-pointer flex items-center">
+                        <Car className="mr-2 h-4 w-4" />
+                        <span>Become a Driver</span>
+                    </Link>
+                </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
                 className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                onClick={() => signOut({ redirectUrl: '/login' })}
+                onClick={handleSignOut}
             >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
@@ -80,8 +88,23 @@ const UserMenu = ({ user, signOut }) => (
 );
 
 const Navbar = () => {
-    const { user, isLoading } = useAuthUser();
+    const { user, role, isLoading } = useAuthUser();
     const { signOut } = useClerk();
+
+    const handleSignOut = async () => {
+        try {
+            // If the user is a driver, mark them offline first
+            if (role === "DRIVER") {
+                const { driverService } = await import("@/services/driver.service");
+                await driverService.goOffline();
+            }
+            await signOut({ redirectUrl: '/login' });
+        } catch (error) {
+            console.error("Logout failed:", error);
+            // Fallback to normal sign out
+            await signOut({ redirectUrl: '/login' });
+        }
+    };
 
     const navLinks = [
         { name: "Home", href: "/", icon: MapIcon },
@@ -94,13 +117,14 @@ const Navbar = () => {
                     <div className="flex items-center gap-8">
                         <Link href="/" className="flex items-center space-x-2">
                             <Image
-                                src="/logo-new.png"
+                                src="/logo.png"
                                 alt="Shift Logo"
                                 width={120}
                                 height={40}
                                 className="h-8 w-auto object-contain"
                                 priority
                             />
+                            <span className="font-bold text-2xl md:text-3xl">Shift</span>
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -123,7 +147,7 @@ const Navbar = () => {
                         {!isLoading && (
                             <>
                                 {user ? (
-                                    <UserMenu user={user} signOut={signOut} />
+                                    <UserMenu user={user} role={role} handleSignOut={handleSignOut} />
                                 ) : (
                                     <div className="hidden md:flex items-center gap-4">
                                         <Button variant="ghost" asChild>

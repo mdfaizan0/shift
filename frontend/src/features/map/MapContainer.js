@@ -32,6 +32,8 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
  */
 const MapContainer = ({ onLocationSelect, pickup, drop, ...props }) => {
     const handleMapClick = (latlng) => {
+        if (!onLocationSelect) return;
+
         if (!pickup) {
             // Step 1: Set pickup
             onLocationSelect("pickup", { lat: latlng.lat, lng: latlng.lng });
