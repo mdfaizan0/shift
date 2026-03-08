@@ -104,7 +104,7 @@ export async function locationUpdate(req, res) {
             return res.status(400).json({ success: false, message: "Driver not found or not online" })
         }
 
-        return res.status(200).json({ success: true })
+        return res.status(200).json({ success: true, message: "Driver location updated successfully", driver })
     } catch (error) {
         console.log("Error updating driver location:", error)
         return res.status(500).json({ success: false, message: "Failed to update driver location" })

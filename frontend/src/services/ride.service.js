@@ -18,4 +18,54 @@ export const rideService = {
         });
         return response.data;
     },
+
+    /**
+     * Fetches details for a specific ride.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Ride data
+     */
+    getRideById: async (id) => {
+        const response = await api.get(`/rides/${id}`);
+        return response.data;
+    },
+
+    /**
+     * Accepts a ride offer.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    acceptRide: async (id) => {
+        const response = await api.post(`/rides/${id}/accept`);
+        return response.data;
+    },
+
+    /**
+     * Rejects a ride offer.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    rejectRide: async (id) => {
+        const response = await api.post(`/rides/${id}/reject`);
+        return response.data;
+    },
+
+    /**
+     * Creates a new ride request.
+     * @param {object} rideData - pickup/dropoff locations and coordinates
+     * @returns {Promise<object>} Created ride data
+     */
+    createRide: async (rideData) => {
+        const response = await api.post("/rides", rideData);
+        return response.data;
+    },
+
+    /**
+     * Triggers the search for nearby drivers for a ride.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    searchRide: async (id) => {
+        const response = await api.post(`/rides/${id}/search`);
+        return response.data;
+    },
 };

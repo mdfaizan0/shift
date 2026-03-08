@@ -3,23 +3,32 @@
 import React from "react";
 import MapContainer from "@/features/map/MapContainer";
 import DriverAvailabilityCard from "./DriverAvailabilityCard";
-import { DriverProvider } from "./DriverProvider";
+import { DriverProvider, useDriver } from "./DriverProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IndianRupee, History, Star } from "lucide-react";
+import DispatchListener from "./dispatch/DispatchListener";
 
 /**
  * Inner dashboard component that consumes DriverProvider.
  */
 const DriverDashboardInternal = () => {
+    const { isOnline, isAvailable } = useDriver();
+    const [activeOffer, setActiveOffer] = React.useState(null);
+
     return (
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
+            {/* Real-time Dispatch Listener */}
+            {isOnline && isAvailable && (
+                <DispatchListener onOfferChange={setActiveOffer} />
+            )}
+
             {/* Sidebar / Controls Overlay */}
             <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
                 <section>
                     <DriverAvailabilityCard />
                 </section>
 
-                {/* Quick Stats Grid */}
+                {/* ... rest of the sidebar code ... */}
                 <div className="grid grid-cols-2 gap-4">
                     <Card className="bg-muted/30 border-none shadow-none">
                         <CardContent className="p-4 flex flex-col items-center text-center">
@@ -63,7 +72,13 @@ const DriverDashboardInternal = () => {
             {/* Map Area */}
             <div className="flex-1 w-full order-first md:order-last">
                 <div className="sticky top-24 h-[400px] md:h-[calc(100vh-12rem)] min-h-[400px]">
-                    <MapContainer className="h-full w-full" />
+                    <MapContainer
+                        className="h-full w-full"
+                        pickup={activeOffer ? {
+                            lat: activeOffer.ride.pickup_lat,
+                            lng: activeOffer.ride.pickup_lng
+                        } : null}
+                    />
                 </div>
             </div>
         </div>

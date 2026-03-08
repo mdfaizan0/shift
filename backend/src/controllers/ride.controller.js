@@ -103,24 +103,24 @@ export async function searchRide(req, res) {
             return res.status(400).json({ success: false, message: "Ride not found or not in REQUESTED state" })
         }
 
-        const { data: nearbyDriver, error: nearbyDriverError } = await supabase
+        const { data: nearbyDrivers, error: nearbyDriversError } = await supabase
             .rpc("find_nearby_drivers", {
                 pickup_lat: ride.pickup_lat,
                 pickup_lng: ride.pickup_lng,
                 radius_meters: 5000
             })
 
-        if (nearbyDriverError) {
-            console.error("Error finding nearby drivers:", nearbyDriverError)
+        if (nearbyDriversError) {
+            console.error("Error finding nearby drivers:", nearbyDriversError)
             return res.status(500).json({ success: false, message: "Failed to find nearby drivers" })
         }
 
-        if (!nearbyDriver || nearbyDriver.length === 0) {
+        if (!nearbyDrivers || nearbyDrivers.length === 0) {
             return res.status(400).json({ success: false, message: "Ride is searching but no nearby drivers found" })
         }
 
         const expiryTime = new Date(Date.now() + 30000).toISOString();
-        const dispatchRows = nearbyDriver.map(d => ({
+        const dispatchRows = nearbyDrivers.map(d => ({
             ride_id: ride.id,
             driver_id: d.user_id,
             expires_at: expiryTime
@@ -138,6 +138,7 @@ export async function searchRide(req, res) {
             .insert(dispatchRows)
 
         if (dispatchError) {
+            
             console.error("Error dispatching ride:", dispatchError)
             return res.status(500).json({ success: false, message: "Failed to dispatch ride" })
         }

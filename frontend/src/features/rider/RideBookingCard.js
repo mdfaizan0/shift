@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { rideService } from "@/services/ride.service";
 
-const RideBookingCard = ({ pickup, drop }) => {
+const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) => {
     const [estimate, setEstimate] = React.useState(null);
     const [isLoading, setIsLoading] = React.useState(false);
 
@@ -22,8 +22,8 @@ const RideBookingCard = ({ pickup, drop }) => {
 
     // Fare Estimation Effect with Debounce
     React.useEffect(() => {
-        if (!pickup || !drop) {
-            setEstimate(null);
+        if (!pickup || !drop || isLocked) {
+            if (!isLocked) setEstimate(null);
             return;
         }
 
@@ -50,14 +50,27 @@ const RideBookingCard = ({ pickup, drop }) => {
 
         const timeoutId = setTimeout(fetchEstimate, 700);
         return () => clearTimeout(timeoutId);
-    }, [pickup, drop]);
+    }, [pickup, drop, isLocked]);
+
+    const handleConfirm = () => {
+        if (onConfirm && pickup && drop && estimate) {
+            onConfirm({
+                pickup_location: pickup.address || formatCoords(pickup), // fallback to coords if address missing
+                dropoff_location: drop.address || formatCoords(drop),
+                pickup_lat: pickup.lat,
+                pickup_lng: pickup.lng,
+                dropoff_lat: drop.lat,
+                dropoff_lng: drop.lng
+            });
+        }
+    };
 
     return (
-        <Card className="w-full shadow-lg border-primary/20">
+        <Card className="w-full shadow-lg border-primary/20 transition-all duration-300">
             <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />
-                    Book a Ride
+                    {isLocked ? "Ride Summary" : "Book a Ride"}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -67,9 +80,10 @@ const RideBookingCard = ({ pickup, drop }) => {
                         <Input
                             id="pickup"
                             placeholder="Click on the map to set pickup"
-                            className="pl-9"
+                            className="pl-9 bg-muted/20"
                             value={formatCoords(pickup)}
                             readOnly
+                            disabled={isLocked}
                         />
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" />
                     </div>
@@ -81,9 +95,10 @@ const RideBookingCard = ({ pickup, drop }) => {
                         <Input
                             id="dropoff"
                             placeholder="Click on the map to set dropoff"
-                            className="pl-9"
+                            className="pl-9 bg-muted/20"
                             value={formatCoords(drop)}
                             readOnly
+                            disabled={isLocked}
                         />
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
                     </div>
@@ -111,20 +126,36 @@ const RideBookingCard = ({ pickup, drop }) => {
                             )}
                         </div>
                         {estimate?.estimated_fare <= 100 && (
-                            <Badge variant="outline">
+                            <Badge variant="outline" className="text-[10px] font-normal uppercase tracking-tight">
                                 Base fare applied
                             </Badge>
                         )}
                     </div>
                 )}
 
-                <Button
-                    className="w-full text-lg h-12 mt-2"
-                    size="lg"
-                    disabled={!pickup || !drop || isLoading}
-                >
-                    {!pickup ? "Select Pickup" : !drop ? "Select Dropoff" : isLoading ? "Estimating..." : "Request Ride"}
-                </Button>
+                {!isLocked && (
+                    <Button
+                        className="w-full text-lg h-12 mt-2 font-bold"
+                        size="lg"
+                        disabled={!pickup || !drop || isLoading || isSubmitting}
+                        onClick={handleConfirm}
+                    >
+                        {isSubmitting ? (
+                            <span className="flex items-center gap-2">
+                                <Skeleton className="h-4 w-4 rounded-full animate-pulse" />
+                                Processing...
+                            </span>
+                        ) : !pickup ? (
+                            "Select Pickup"
+                        ) : !drop ? (
+                            "Select Dropoff"
+                        ) : isLoading ? (
+                            "Estimating..."
+                        ) : (
+                            "Confirm Ride"
+                        )}
+                    </Button>
+                )}
             </CardContent>
         </Card>
     );
