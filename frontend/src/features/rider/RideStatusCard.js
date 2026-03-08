@@ -9,6 +9,8 @@ const RideStatusCard = ({ status = "IDLE", rideData }) => {
     // Current UI-only implementation with static state
     const renderStatus = () => {
         switch (status) {
+            case "REQUESTED":
+                return <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 border-none">Ride Requested</Badge>;
             case "SEARCHING":
                 return <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-none animate-pulse">Searching for drivers...</Badge>;
             case "ACCEPTED":
@@ -39,19 +41,21 @@ const RideStatusCard = ({ status = "IDLE", rideData }) => {
                     <div className="py-4 text-center text-sm text-muted-foreground font-light">
                         Your active ride details will appear here once you book.
                     </div>
-                ) : status === "SEARCHING" ? (
+                ) : (status === "REQUESTED" || status === "SEARCHING") ? (
                     <div className="space-y-4 py-2">
                         <div className="flex items-center gap-4">
-                            <div className="p-2 bg-primary/10 rounded-full">
-                                <Clock className="h-5 w-5 text-primary animate-pulse" />
+                            <div className="p-2 bg-orange-500/10 rounded-full">
+                                <Clock className={`h-5 w-5 ${status === "SEARCHING" ? "text-blue-600 animate-pulse" : "text-orange-600"}`} />
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Stage</p>
-                                <p className="text-sm font-semibold">Broadcasting to nearby drivers...</p>
+                                <p className="text-sm font-semibold">
+                                    {status === "SEARCHING" ? "Broadcasting to nearby drivers..." : "Waiting for backend dispatch..."}
+                                </p>
                             </div>
                         </div>
                     </div>
-                ) : (
+                ) : ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status) ? (
                     <div className="space-y-5">
                         <div className="flex items-center gap-4">
                             <div className="p-2 bg-primary/10 rounded-full">
@@ -60,8 +64,8 @@ const RideStatusCard = ({ status = "IDLE", rideData }) => {
                             <div>
                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Driver Info</p>
                                 <p className="text-sm font-semibold">
-                                    {rideData?.driver?.full_name || "John Doe"}
-                                    <span className="text-muted-foreground ml-2">({rideData?.driver?.vehicle_number || "MH-12-AB-1234"})</span>
+                                    {rideData?.driver?.name || rideData?.driver?.full_name || "Assigned Driver"}
+                                    <span className="text-muted-foreground ml-2">({rideData?.driver?.profile?.vehicle_number || rideData?.driver?.vehicle_number || "---"})</span>
                                 </p>
                             </div>
                         </div>
@@ -73,10 +77,14 @@ const RideStatusCard = ({ status = "IDLE", rideData }) => {
                             <div>
                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Safety PIN</p>
                                 <p className="text-2xl font-black italic tracking-[0.2em] text-primary">
-                                    {rideData?.otp || "4829"}
+                                    {rideData?.otp_code || rideData?.otp || "----"}
                                 </p>
                             </div>
                         </div>
+                    </div>
+                ) : (
+                    <div className="py-4 text-center text-sm text-muted-foreground font-light italic">
+                        Processing ride status: {status}
                     </div>
                 )}
             </CardContent>

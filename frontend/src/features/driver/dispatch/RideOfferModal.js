@@ -144,7 +144,7 @@ export default function RideOfferModal({ rideId, rideData, expiresAt, onAccept, 
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-muted-foreground uppercase">Est. Fare</p>
-                                    <p className="text-lg font-black italic">₹{ride.fare}</p>
+                                    <p className="text-lg font-black italic">₹{(ride.fare).toFixed(2)}</p>
                                 </div>
                             </div>
                             <Badge variant="outline" className="h-fit">Cash Trip</Badge>

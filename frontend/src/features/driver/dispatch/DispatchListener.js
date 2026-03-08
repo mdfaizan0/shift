@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import RideOfferModal from "./RideOfferModal";
+import { rideService } from "@/services/ride.service";
 
 /**
  * DispatchListener handles real-time subscriptions for ride offers.

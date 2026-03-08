@@ -12,7 +12,7 @@ export async function goOnline(req, res) {
             .eq("user_id", user_id)
             .eq("is_online", false)
             .select()
-            .single()
+            .maybeSingle()
 
         if (driverError) {
             console.log("Error updating driver status:", driverError)
@@ -54,7 +54,7 @@ export async function goOffline(req, res) {
             .eq("user_id", user_id)
             .eq("is_online", true)
             .select()
-            .single()
+            .maybeSingle()
 
         if (driverError) {
             console.log("Error updating driver status:", driverError)
@@ -93,7 +93,7 @@ export async function locationUpdate(req, res) {
             .eq("user_id", req.user.id)
             .eq("is_online", true)
             .select()
-            .single()
+            .maybeSingle()
 
         if (driverError) {
             console.log("Error updating driver location:", driverError)
@@ -190,7 +190,7 @@ export async function getDriverProfile(req, res) {
             .from("driver_profiles")
             .select("*")
             .eq("user_id", userId)
-            .single()
+            .maybeSingle()
 
         if (driverError) {
             console.log("Error fetching driver profile:", driverError)
@@ -214,7 +214,7 @@ export async function toggleAvailability(req, res) {
         const { data, error } = await supabase
             .rpc("toggle_driver_availability", { driver_user_id: userId })
             .select()
-            .single()
+            .maybeSingle()
 
         if (error) {
             console.log("Error updating driver availability:", error)

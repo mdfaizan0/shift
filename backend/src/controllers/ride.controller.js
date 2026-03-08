@@ -102,13 +102,14 @@ export async function searchRide(req, res) {
         if (!ride) {
             return res.status(400).json({ success: false, message: "Ride not found or not in REQUESTED state" })
         }
-
+        
         const { data: nearbyDrivers, error: nearbyDriversError } = await supabase
             .rpc("find_nearby_drivers", {
-                pickup_lat: ride.pickup_lat,
                 pickup_lng: ride.pickup_lng,
+                pickup_lat: ride.pickup_lat,
                 radius_meters: 5000
             })
+
 
         if (nearbyDriversError) {
             console.error("Error finding nearby drivers:", nearbyDriversError)
@@ -126,19 +127,12 @@ export async function searchRide(req, res) {
             expires_at: expiryTime
         }))
 
-        const { error: expiredDispatchesError } = await supabase.rpc('expire_dispatches');
-
-        if (expiredDispatchesError) {
-            console.error("Error expiring dispatches:", expiredDispatchesError)
-            return res.status(500).json({ success: false, message: "Failed to expire dispatches" })
-        }
-
         const { error: dispatchError } = await supabase
             .from("ride_dispatches")
             .insert(dispatchRows)
 
         if (dispatchError) {
-            
+
             console.error("Error dispatching ride:", dispatchError)
             return res.status(500).json({ success: false, message: "Failed to dispatch ride" })
         }

@@ -38,5 +38,15 @@ export const driverService = {
     toggleAvailability: async () => {
         const response = await api.post("/driver/toggle");
         return response.data;
+    },
+
+    /**
+     * Updates the driver's current location.
+     * @param {object} coords - lat and lng
+     * @returns {Promise<object>} Status
+     */
+    locationUpdate: async (coords) => {
+        const response = await api.post("/driver/location-update", coords);
+        return response.data;
     }
 };

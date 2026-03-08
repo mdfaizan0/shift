@@ -11,7 +11,7 @@ export const authMiddleware = async (req, res, next) => {
             .from("users")
             .select("*")
             .eq("id", userId)
-            .single()
+            .maybeSingle()
 
         if (userError) {
             console.error("Error in auth middleware:", userError);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import MapContainer from "@/features/map/MapContainer";
 import RideBookingCard from "./RideBookingCard";
 import RideStatusCard from "./RideStatusCard";
+import RideStatusTimeline from "./RideStatusTimeline";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { rideService } from "@/services/ride.service";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +13,7 @@ const RiderDashboard = () => {
     const [pickup, setPickup] = useState(null);
     const [drop, setDrop] = useState(null);
     const [activeRide, setActiveRide] = useState(null);
+    const [driverLocation, setDriverLocation] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleLocationSelect = useCallback((type, coords) => {
@@ -25,7 +27,50 @@ const RiderDashboard = () => {
         }
     }, [activeRide]);
 
-    // Real-time subscription for ride updates
+    // Parse PostGIS point string (SRID=4326;POINT(lng lat))
+    const parsePoint = (pointStr) => {
+        if (!pointStr) return null;
+        try {
+            const match = pointStr.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+            if (match) {
+                return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+            }
+        } catch (e) {
+            console.error("Failed to parse point:", pointStr);
+        }
+        return null;
+    };
+
+    // 1. Fetch active ride on mount
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const checkActiveRide = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from("rides")
+                    .select("*, driver:driver_id(*, profile:driver_profiles(*))")
+                    .eq("rider_id", user.id)
+                    .not("status", "in", '("COMPLETED","CANCELLED")')
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (data) {
+                    setActiveRide(data);
+                    if (data.driver?.profile?.location) {
+                        setDriverLocation(parsePoint(data.driver.profile.location));
+                    }
+                }
+            } catch (err) {
+                console.error("Error checking active ride:", err);
+            }
+        };
+
+        checkActiveRide();
+    }, [user?.id]);
+
+    // 2. Real-time subscription for ride updates
     useEffect(() => {
         if (!user?.id) return;
 
@@ -39,13 +84,23 @@ const RiderDashboard = () => {
                     table: "rides",
                     filter: `rider_id=eq.${user.id}`
                 },
-                (payload) => {
+                async (payload) => {
                     console.log("Ride update received:", payload);
                     if (payload.eventType === "DELETE") {
                         setActiveRide(null);
                         setPickup(null);
                         setDrop(null);
+                        setDriverLocation(null);
                     } else {
+                        // If it becomes ACCEPTED or state change requires refresh
+                        if (payload.new.status === "ACCEPTED" ||
+                            (payload.new.status !== activeRide?.status && !payload.new.driver)) {
+                            const detail = await rideService.getRideById(payload.new.id);
+                            if (detail.success) {
+                                setActiveRide(detail.ride);
+                                return;
+                            }
+                        }
                         setActiveRide(payload.new);
                     }
                 }
@@ -55,7 +110,41 @@ const RiderDashboard = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user?.id]);
+    }, [user?.id, activeRide?.id, activeRide?.status]);
+
+    // 3. Real-time subscription for driver location updates
+    useEffect(() => {
+        const driverId = activeRide?.driver_id;
+        const status = activeRide?.status;
+
+        if (!driverId || !["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
+            setDriverLocation(null);
+            return;
+        }
+
+        const channel = supabase
+            .channel(`driver-loc-${driverId}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "driver_profiles",
+                    filter: `user_id=eq.${driverId}`
+                },
+                (payload) => {
+                    if (payload.new.location) {
+                        const loc = parsePoint(payload.new.location);
+                        if (loc) setDriverLocation(loc);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [activeRide?.driver_id, activeRide?.status]);
 
     const handleRideConfirm = async (rideData) => {
         setIsSubmitting(true);
@@ -96,6 +185,12 @@ const RiderDashboard = () => {
                     />
                 </section>
 
+                {activeRide && (
+                    <section className="animate-in fade-in slide-in-from-left-4 duration-500">
+                        <RideStatusTimeline currentStatus={activeRide.status} />
+                    </section>
+                )}
+
                 <section>
                     <RideStatusCard
                         status={activeRide?.status || "IDLE"}
@@ -118,6 +213,8 @@ const RiderDashboard = () => {
                         onLocationSelect={handleLocationSelect}
                         pickup={activeRide ? { lat: activeRide.pickup_lat, lng: activeRide.pickup_lng } : pickup}
                         drop={activeRide ? { lat: activeRide.dropoff_lat, lng: activeRide.dropoff_lng } : drop}
+                        driverLocation={driverLocation}
+                        status={activeRide?.status || "IDLE"}
                     />
                 </div>
             </div>

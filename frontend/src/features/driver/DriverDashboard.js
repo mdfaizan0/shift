@@ -7,6 +7,7 @@ import { DriverProvider, useDriver } from "./DriverProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IndianRupee, History, Star } from "lucide-react";
 import DispatchListener from "./dispatch/DispatchListener";
+import { useDriverLocation } from "@/hooks/useDriverLocation";
 
 /**
  * Inner dashboard component that consumes DriverProvider.
@@ -14,6 +15,9 @@ import DispatchListener from "./dispatch/DispatchListener";
 const DriverDashboardInternal = () => {
     const { isOnline, isAvailable } = useDriver();
     const [activeOffer, setActiveOffer] = React.useState(null);
+
+    // Track and broadcast location while online
+    useDriverLocation(isOnline);
 
     return (
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
