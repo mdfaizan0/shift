@@ -74,7 +74,9 @@ export const realtimeService = {
                 },
                 (payload) => onUpdate(payload.new)
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log(`Driver Location Subscription Status (${driverId}):`, status);
+            });
     },
 
     /**

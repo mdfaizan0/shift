@@ -15,7 +15,7 @@ import ActiveRideCard from "./ActiveRideCard";
  */
 const DriverDashboardInternal = () => {
     const { isOnline, isAvailable, activeRide } = useDriver();
-    const [activeOffer, setActiveOffer] = React.useState(null);
+    const [activeOffers, setActiveOffers] = React.useState([]);
 
     // Track and broadcast location while online
     useDriverLocation(isOnline);
@@ -24,7 +24,7 @@ const DriverDashboardInternal = () => {
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
             {/* Real-time Dispatch Listener */}
             {isOnline && isAvailable && !activeRide && (
-                <DispatchListener onOfferChange={setActiveOffer} activeRide={activeRide} />
+                <DispatchListener onOffersChange={setActiveOffers} activeRide={activeRide} />
             )}
 
             {/* Sidebar / Controls Overlay */}
@@ -86,10 +86,12 @@ const DriverDashboardInternal = () => {
                         pickup={activeRide ? {
                             lat: activeRide.pickup_lat,
                             lng: activeRide.pickup_lng
-                        } : activeOffer ? {
-                            lat: activeOffer.ride.pickup_lat,
-                            lng: activeOffer.ride.pickup_lng
                         } : null}
+                        offeredPickups={activeOffers.map(o => ({
+                            id: o.id,
+                            lat: o.ride.pickup_lat,
+                            lng: o.ride.pickup_lng
+                        }))}
                         drop={activeRide ? {
                             lat: activeRide.dropoff_lat,
                             lng: activeRide.dropoff_lng

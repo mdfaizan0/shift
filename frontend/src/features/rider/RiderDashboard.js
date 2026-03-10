@@ -14,6 +14,7 @@ const RiderDashboard = () => {
     const [pickup, setPickup] = useState(null);
     const [drop, setDrop] = useState(null);
     const [activeRide, setActiveRide] = useState(null);
+    console.log("RiderDashboard Render. activeRide status:", activeRide?.status, "driverId:", activeRide?.driver_id);
     const [driverLocation, setDriverLocation] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,17 +29,34 @@ const RiderDashboard = () => {
         }
     }, [activeRide]);
 
-    // Parse PostGIS point string (SRID=4326;POINT(lng lat))
-    const parsePoint = (pointStr) => {
-        if (!pointStr) return null;
-        try {
-            const match = pointStr.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
-            if (match) {
-                return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+    // Parse PostGIS location (supports both WKT string and WKB HEX)
+    const parsePoint = (point) => {
+        if (!point) return null;
+
+        if (typeof point === 'string' && point.includes('POINT')) {
+            try {
+                const match = point.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+                if (match) {
+                    return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+                }
+            } catch (e) {
+                console.error("Failed to parse WKT point:", point);
             }
-        } catch (e) {
-            console.error("Failed to parse point:", pointStr);
         }
+
+        if (typeof point === 'string' && /^[0-9A-F]+$/i.test(point) && point.length >= 50) {
+            try {
+                const buffer = new Uint8Array(point.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
+                const view = new DataView(buffer);
+                const isLittleEndian = view.getUint8(0) === 1;
+                const lng = view.getFloat64(9, isLittleEndian);
+                const lat = view.getFloat64(17, isLittleEndian);
+                return { lat, lng };
+            } catch (e) {
+                console.error("Failed to parse WKB HEX point:", e);
+            }
+        }
+
         return null;
     };
 
@@ -76,14 +94,15 @@ const RiderDashboard = () => {
         if (!user?.id) return;
 
         const channel = realtimeService.subscribeToRideUpdates(user.id, "rider_id", async (updatedRide) => {
-            console.log("Ride update received (Rider):", updatedRide);
-
             // If it becomes ACCEPTED or state change requires refresh (to get driver details)
             if (updatedRide.status === "ACCEPTED" ||
                 (updatedRide.status !== activeRide?.status && !updatedRide.driver)) {
                 const detail = await rideService.getRideById(updatedRide.id);
                 if (detail.success) {
                     setActiveRide(detail.ride);
+                    if (detail.ride.driver?.profile?.location) {
+                        setDriverLocation(parsePoint(detail.ride.driver.profile.location));
+                    }
                     return;
                 }
             }
@@ -176,6 +195,7 @@ const RiderDashboard = () => {
                         pickup={activeRide ? { lat: activeRide.pickup_lat, lng: activeRide.pickup_lng } : pickup}
                         drop={activeRide ? { lat: activeRide.dropoff_lat, lng: activeRide.dropoff_lng } : drop}
                         driverId={activeRide?.driver_id}
+                        initialDriverLocation={driverLocation}
                         status={activeRide?.status || "IDLE"}
                     />
                 </div>

@@ -9,10 +9,11 @@
  * @param {string} id - Unique identifier
  * @returns {object} Marker object
  */
-export const createMarker = (lat, lng, id) => {
+export const createMarker = (lat, lng, id, type = "default") => {
     return {
         id,
         lat,
         lng,
+        type,
     };
 };

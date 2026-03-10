@@ -107,11 +107,11 @@ export async function searchRide(req, res) {
         if (!ride) {
             return res.status(400).json({ success: false, message: "Ride not found or not in REQUESTED state" })
         }
-        
+
         const { data: nearbyDrivers, error: nearbyDriversError } = await supabase
             .rpc("find_nearby_drivers", {
-                pickup_lat: ride.pickup_lat,
                 pickup_lng: ride.pickup_lng,
+                pickup_lat: ride.pickup_lat,
                 radius_meters: 5000
             })
 
@@ -122,7 +122,7 @@ export async function searchRide(req, res) {
         }
 
         if (!nearbyDrivers || nearbyDrivers.length === 0) {
-            return res.status(400).json({ success: false, message: "Ride is searching but no nearby drivers found" })
+            return res.status(200).json({ success: true, message: "Ride is searching but no nearby drivers found", ride })
         }
 
         const expiryTime = new Date(Date.now() + 30000).toISOString();

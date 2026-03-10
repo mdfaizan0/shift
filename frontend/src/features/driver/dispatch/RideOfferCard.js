@@ -47,9 +47,23 @@ export default function RideOfferCard({ ride, dispatch, onAccept, onReject }) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+            initial={{ opacity: 0, x: 50, scale: 0.9, boxShadow: "0 0 0px rgba(var(--color-primary), 0)" }}
+            animate={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+                boxShadow: ["0 0 0px rgba(59, 130, 246, 0)", "0 0 20px rgba(59, 130, 246, 0.3)", "0 0 0px rgba(59, 130, 246, 0)"]
+            }}
+            exit={{
+                opacity: 0,
+                x: 20,
+                scale: 0.95,
+                transition: { duration: 0.4, ease: "anticipate" }
+            }}
+            transition={{
+                duration: 0.5,
+                boxShadow: { duration: 1, repeat: 1 }
+            }}
             layout
         >
             <Card className={`relative overflow-hidden shadow-xl bg-background/95 backdrop-blur-sm transition-all duration-300 border-2 ${timeLeft <= 10
