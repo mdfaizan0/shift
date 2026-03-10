@@ -111,8 +111,19 @@ const RiderDashboard = () => {
                 setActiveRide(newRide);
 
                 // 2. Immediately trigger dispatch search
-                await rideService.searchRide(newRide.id);
-                toast.success("Ride requested! Searching for nearby drivers.");
+                try {
+                    const searchResult = await rideService.searchRide(newRide.id);
+                    if (searchResult.success) {
+                        setActiveRide(searchResult.ride);
+                        toast.success("Ride requested! Searching for nearby drivers.");
+                    }
+                } catch (searchError) {
+                    console.error("Search failed:", searchError);
+                    // Even if search returns 400 (no drivers), the ride might still be in SEARCHING status
+                    // We can refresh the ride status once more to be sure
+                    const latest = await rideService.getRideById(newRide.id);
+                    if (latest.success) setActiveRide(latest.ride);
+                }
             }
         } catch (error) {
             console.error("Ride creation failed:", error);

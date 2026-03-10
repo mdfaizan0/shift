@@ -21,10 +21,15 @@ export async function estimateRide(req, res) {
             return res.status(500).json({ success: false, message: "Failed to estimate fare" });
         }
 
+        const fareData = data?.map(item => ({
+            ...item,
+            estimated_fare: item.estimated_fare.toFixed(2)
+        }))
+
         return res.status(200).json({
             success: true,
             message: "Fare estimated successfully",
-            estimate: data[0]
+            estimate: fareData[0]
         });
 
     } catch (error) {
@@ -61,7 +66,7 @@ export async function createRide(req, res) {
                 pickup_lng,
                 dropoff_lat,
                 dropoff_lng,
-                fare: estimatedFare
+                fare: estimatedFare.toFixed(2)
             })
             .select()
             .single();

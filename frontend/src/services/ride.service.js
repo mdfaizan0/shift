@@ -68,4 +68,45 @@ export const rideService = {
         const response = await api.post(`/rides/${id}/search`);
         return response.data;
     },
+
+    /**
+     * Sets the ride status to DRIVER_EN_ROUTE.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    enrouteRide: async (id) => {
+        const response = await api.post(`/rides/${id}/enroute`);
+        return response.data;
+    },
+
+    /**
+     * Starts the ride after OTP verification.
+     * @param {string} id - Ride ID
+     * @param {string} otp - 4-digit OTP
+     * @returns {Promise<object>} Status
+     */
+    startRide: async (id, otp) => {
+        const response = await api.post(`/rides/${id}/start`, { otp });
+        return response.data;
+    },
+
+    /**
+     * Completes the ride.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    completeRide: async (id) => {
+        const response = await api.post(`/rides/${id}/complete`);
+        return response.data;
+    },
+
+    /**
+     * Cancels the ride.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    cancelRide: async (id) => {
+        const response = await api.post(`/rides/${id}/cancel`);
+        return response.data;
+    },
 };

@@ -17,6 +17,7 @@ export const DriverProvider = ({ children }) => {
     const [isAvailable, setIsAvailable] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [driverProfile, setDriverProfile] = useState(null);
+    const [activeRide, setActiveRide] = useState(null);
 
     // Status tracking refs
     const statusRef = useRef("INITIALIZING");
@@ -27,12 +28,27 @@ export const DriverProvider = ({ children }) => {
 
         setIsLoading(true);
         try {
+            // 1. Fetch Profile
             const data = await driverService.getProfile();
             if (data.success) {
                 setDriverProfile(data.driver);
                 setIsOnline(data.driver.is_online);
                 setIsAvailable(data.driver.is_available);
                 statusRef.current = data.driver.is_online ? "ONLINE" : "OFFLINE";
+
+                // 2. Fetch Active Ride directly from Supabase to ensure persistence
+                const { data: ride, error: rideError } = await realtimeService.supabase
+                    .from("rides")
+                    .select("*, driver:driver_id(*, profile:driver_profiles(*))")
+                    .eq("driver_id", data.driver.user_id)
+                    .in("status", ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"])
+                    .maybeSingle();
+
+                if (ride) {
+                    setActiveRide(ride);
+                } else {
+                    setActiveRide(null);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch driver profile:", error);
@@ -153,6 +169,8 @@ export const DriverProvider = ({ children }) => {
         isAvailable,
         isLoading,
         driverProfile,
+        activeRide,
+        setActiveRide,
         goOnline,
         goOffline,
         toggleAvailability,

@@ -113,7 +113,7 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
                                 <Skeleton className="h-6 w-20" />
                             ) : (
                                 <Badge variant="secondary" className="text-lg px-3 py-1 bg-primary/10 text-primary border-primary/20">
-                                    ₹{(estimate.estimated_fare).toFixed(2)}
+                                    ₹{estimate.estimated_fare}
                                 </Badge>
                             )}
                         </div>

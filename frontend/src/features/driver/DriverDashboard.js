@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IndianRupee, History, Star } from "lucide-react";
 import DispatchListener from "./dispatch/DispatchListener";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import ActiveRideCard from "./ActiveRideCard";
 
 /**
  * Inner dashboard component that consumes DriverProvider.
  */
 const DriverDashboardInternal = () => {
-    const { isOnline, isAvailable } = useDriver();
+    const { isOnline, isAvailable, activeRide } = useDriver();
     const [activeOffer, setActiveOffer] = React.useState(null);
 
     // Track and broadcast location while online
@@ -22,14 +23,18 @@ const DriverDashboardInternal = () => {
     return (
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
             {/* Real-time Dispatch Listener */}
-            {isOnline && isAvailable && (
-                <DispatchListener onOfferChange={setActiveOffer} />
+            {isOnline && isAvailable && !activeRide && (
+                <DispatchListener onOfferChange={setActiveOffer} activeRide={activeRide} />
             )}
 
             {/* Sidebar / Controls Overlay */}
             <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
                 <section>
-                    <DriverAvailabilityCard />
+                    {activeRide ? (
+                        <ActiveRideCard ride={activeRide} />
+                    ) : (
+                        <DriverAvailabilityCard />
+                    )}
                 </section>
 
                 {/* ... rest of the sidebar code ... */}
@@ -78,10 +83,18 @@ const DriverDashboardInternal = () => {
                 <div className="sticky top-24 h-[400px] md:h-[calc(100vh-12rem)] min-h-[400px]">
                     <MapContainer
                         className="h-full w-full"
-                        pickup={activeOffer ? {
+                        pickup={activeRide ? {
+                            lat: activeRide.pickup_lat,
+                            lng: activeRide.pickup_lng
+                        } : activeOffer ? {
                             lat: activeOffer.ride.pickup_lat,
                             lng: activeOffer.ride.pickup_lng
                         } : null}
+                        drop={activeRide ? {
+                            lat: activeRide.dropoff_lat,
+                            lng: activeRide.dropoff_lng
+                        } : null}
+                        status={activeRide ? activeRide.status : "IDLE"}
                     />
                 </div>
             </div>
