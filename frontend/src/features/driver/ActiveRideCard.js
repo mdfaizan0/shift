@@ -12,30 +12,42 @@ import { useDriver } from "./DriverProvider";
 
 export default function ActiveRideCard({ ride }) {
     const { refreshStats, setActiveRide } = useDriver();
-    const [otp, setOtp] = useState("");
+    const [otp, setOtp] = useState(["", "", "", ""]);
     const [isLoading, setIsLoading] = useState(false);
 
-    const isEnRoute = ride.status === "DRIVER_EN_ROUTE";
     const isAccepted = ride.status === "ACCEPTED";
+    const isEnRoute = ride.status === "DRIVER_EN_ROUTE";
     const isStarted = ride.status === "STARTED";
+    const isCompleted = ride.status === "COMPLETED";
+
+    const otpString = otp.join("");
 
     const handleStartRide = async () => {
-        if (!otp || otp.length !== 4) {
-            toast.error("Please enter a valid 4-digit OTP");
+        if (otpString.length !== 4) {
+            toast.error("Please enter the 4-digit OTP");
             return;
         }
 
         setIsLoading(true);
         try {
-            const res = await rideService.startRide(ride.id, otp);
+            const res = await rideService.startRide(ride.id, otpString);
             if (res.success) {
                 toast.success("Ride started! Drive safely.");
                 setActiveRide(res.ride);
                 refreshStats();
+            } else {
+                // Task 4: Error handling
+                setOtp(["", "", "", ""]);
+                document.getElementById("otp-0")?.focus();
             }
         } catch (error) {
             console.error("Failed to start ride:", error);
-            // Error handled by interceptor (likely invalid OTP)
+            // Task 4: Error handling on failure
+            setOtp(["", "", "", ""]);
+            document.getElementById("otp-0")?.focus();
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -91,21 +103,41 @@ export default function ActiveRideCard({ ride }) {
         }
     };
 
-    const handleOTPInput = (e) => {
+    const handleOTPInput = (e, index) => {
         const val = e.target.value.replace(/\D/g, "");
-        if (!val) {
-            const newOtp = otp.split("");
-            newOtp[index] = "";
-            setOtp(newOtp.join(""));
-            return;
-        }
-        const newOtp = otp.split("");
+        if (!val) return;
+
+        const newOtp = [...otp];
         newOtp[index] = val[val.length - 1];
-        setOtp(newOtp.join(""));
+        setOtp(newOtp);
+
+        // Auto focus next
         if (index < 3) {
             document.getElementById(`otp-${index + 1}`)?.focus();
         }
-    }
+    };
+
+    const handleKeyDown = (e, index) => {
+        if (e.key === "Backspace") {
+            if (!otp[index] && index > 0) {
+                const newOtp = [...otp];
+                newOtp[index - 1] = "";
+                setOtp(newOtp);
+                document.getElementById(`otp-${index - 1}`)?.focus();
+            } else {
+                const newOtp = [...otp];
+                newOtp[index] = "";
+                setOtp(newOtp);
+            }
+        }
+    };
+
+    const steps = [
+        { label: "Accepted", active: true, done: isEnRoute || isStarted || isCompleted },
+        { label: "En Route", active: isEnRoute || isStarted || isCompleted, done: isStarted || isCompleted },
+        { label: "Started", active: isStarted || isCompleted, done: isCompleted },
+        { label: "Completed", active: isCompleted, done: isCompleted }
+    ];
 
     return (
         <Card className="w-full shadow-lg border-primary/20 bg-background/95 backdrop-blur-sm">
@@ -121,20 +153,44 @@ export default function ActiveRideCard({ ride }) {
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
+                {/* Task 3: Progress Indicator */}
+                <div className="flex items-center justify-between mb-6 px-1">
+                    {steps.map((step, i) => (
+                        <React.Fragment key={step.label}>
+                            <div className="flex flex-col items-center gap-1.5 relative">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${step.done ? "bg-green-500 text-white" :
+                                        step.active ? "bg-primary text-white scale-110 shadow-lg shadow-primary/30" :
+                                            "bg-muted text-muted-foreground"
+                                    }`}>
+                                    {step.done ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
+                                </div>
+                                <span className={`text-[10px] font-bold uppercase tracking-tighter ${step.active || step.done ? "text-foreground" : "text-muted-foreground"
+                                    }`}>
+                                    {step.label}
+                                </span>
+                            </div>
+                            {i < steps.length - 1 && (
+                                <div className={`flex-1 h-0.5 mx-2 mb-4 transition-colors duration-500 ${steps[i + 1].active ? "bg-green-500" : "bg-muted"
+                                    }`} />
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
+
                 <div className="space-y-3">
                     <div className="flex gap-3">
                         <div className="flex flex-col items-center pt-1">
-                            <div className="h-2 w-2 rounded-full bg-primary" />
-                            <div className="flex-1 w-px bg-muted mx-auto my-1" />
-                            <div className="h-2 w-2 rounded-full bg-destructive" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                            <div className="flex-1 w-0.5 bg-muted mx-auto my-1" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
                         </div>
                         <div className="flex-1 space-y-3">
                             <div>
-                                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Pickup</p>
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-0.5">Pickup Point</p>
                                 <p className="text-sm font-semibold leading-tight">{ride.pickup_location}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Dropoff</p>
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-0.5">Dropoff Point</p>
                                 <p className="text-sm font-semibold leading-tight">{ride.dropoff_location}</p>
                             </div>
                         </div>
@@ -168,15 +224,12 @@ export default function ActiveRideCard({ ride }) {
                                         type="text"
                                         inputMode="numeric"
                                         pattern="[0-9]*"
-                                        value={otp[index] || ""}
-                                        onChange={handleOTPInput}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Backspace" && !otp[index] && index > 0) {
-                                                document.getElementById(`otp-${index - 1}`)?.focus();
-                                            }
-                                        }}
-                                        className="w-12 h-14 text-center text-xl font-bold border-2 focus:border-primary"
+                                        value={otp[index]}
+                                        onChange={(e) => handleOTPInput(e, index)}
+                                        onKeyDown={(e) => handleKeyDown(e, index)}
+                                        className="w-12 h-14 text-center text-xl font-black border-2 focus:ring-primary focus:border-primary transition-all duration-200"
                                         maxLength={1}
+                                        autoFocus={index === 0}
                                     />
                                 ))}
                             </div>
@@ -186,24 +239,32 @@ export default function ActiveRideCard({ ride }) {
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
                 {isAccepted && (
-                    <Button className="w-full h-11 font-bold" onClick={handleEnRoute} disabled={isLoading}>
+                    <Button className="w-full h-12 font-bold text-md shadow-lg shadow-primary/20" onClick={handleEnRoute} disabled={isLoading}>
                         {isLoading ? <Loader2 className="animate-spin mr-2" /> : "I'm En Route"}
                     </Button>
                 )}
                 {isEnRoute && (
-                    <Button className="w-full h-11 font-bold" onClick={handleStartRide} disabled={isLoading || otp.length !== 4}>
+                    <Button className="w-full h-12 font-bold text-md shadow-lg shadow-primary/20" onClick={handleStartRide} disabled={isLoading || otpString.length !== 4}>
                         {isLoading ? <Loader2 className="animate-spin mr-2" /> : "Start Ride"}
                     </Button>
                 )}
                 {isStarted && (
-                    <Button className="w-full h-11 font-bold bg-green-600 hover:bg-green-700" onClick={handleCompleteRide} disabled={isLoading}>
+                    <Button className="w-full h-12 font-bold text-md bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20" onClick={handleCompleteRide} disabled={isLoading}>
                         {isLoading ? <Loader2 className="animate-spin mr-2" /> : "Complete Ride"}
                     </Button>
                 )}
-                {!isStarted && (
-                    <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 text-xs" onClick={handleCancelRide} disabled={isLoading}>
+                {!isStarted && !isCompleted && (
+                    <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 text-xs font-semibold py-1 h-8" onClick={handleCancelRide} disabled={isLoading}>
                         Cancel Ride
                     </Button>
+                )}
+                {isCompleted && (
+                    <div className="w-full p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                        <p className="text-green-600 font-bold flex items-center justify-center gap-2">
+                            <CheckCircle2 className="h-5 w-5" />
+                            Ride Completed
+                        </p>
+                    </div>
                 )}
             </CardFooter>
         </Card>

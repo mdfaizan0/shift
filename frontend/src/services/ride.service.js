@@ -109,4 +109,14 @@ export const rideService = {
         const response = await api.post(`/rides/${id}/cancel`);
         return response.data;
     },
+
+    /**
+     * Fetches ride history for a specific role.
+     * @param {string} role - 'rider' or 'driver'
+     * @returns {Promise<object>} Ride history data
+     */
+    getRideHistory: async (role) => {
+        const response = await api.get(`/rides/history?as=${role}`);
+        return response.data;
+    },
 };
