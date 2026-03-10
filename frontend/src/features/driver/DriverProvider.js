@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { driverService } from "@/services/driver.service";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { realtimeService } from "@/lib/realtime";
 
 const DriverContext = createContext(undefined);
 
@@ -131,6 +132,21 @@ export const DriverProvider = ({ children }) => {
             mountedRef.current = false;
         };
     }, [role, goOnline]);
+
+    // 3. Realtime Ride Updates (Moved to top level to avoid invalid hook call)
+    useEffect(() => {
+        if (role !== "DRIVER" || !driverProfile?.id) return;
+
+        const channel = realtimeService.subscribeToRideUpdates(driverProfile.id, "driver_id", (updatedRide) => {
+            console.log("Ride update received (Driver):", updatedRide);
+            // We refresh the profile/stats to ensure all related states are in sync
+            fetchDriverStats();
+        });
+
+        return () => {
+            realtimeService.unsubscribe(channel);
+        };
+    }, [role, driverProfile?.id, fetchDriverStats]);
 
     const value = {
         isOnline,

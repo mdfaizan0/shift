@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { realtimeService } from "@/lib/realtime";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import RideOfferModal from "./RideOfferModal";
 import { rideService } from "@/services/ride.service";
@@ -20,24 +20,12 @@ export default function DispatchListener({ onOfferChange }) {
     useEffect(() => {
         if (!user?.id) return;
 
-        const channel = supabase
-            .channel(`dispatches-${user.id}`)
-            .on(
-                "postgres_changes",
-                {
-                    event: "INSERT",
-                    schema: "public",
-                    table: "ride_dispatches",
-                    filter: `driver_id=eq.${user.id}`
-                },
-                (payload) => {
-                    setDispatchQueue((prev) => [...prev, payload.new]);
-                }
-            )
-            .subscribe();
+        const channel = realtimeService.subscribeToDriverDispatch(user.id, (newDispatch) => {
+            setDispatchQueue((prev) => [...prev, newDispatch]);
+        });
 
         return () => {
-            supabase.removeChannel(channel);
+            realtimeService.unsubscribe(channel);
         };
     }, [user?.id]);
 

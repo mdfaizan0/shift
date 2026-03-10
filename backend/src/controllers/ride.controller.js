@@ -105,8 +105,8 @@ export async function searchRide(req, res) {
         
         const { data: nearbyDrivers, error: nearbyDriversError } = await supabase
             .rpc("find_nearby_drivers", {
-                pickup_lng: ride.pickup_lng,
                 pickup_lat: ride.pickup_lat,
+                pickup_lng: ride.pickup_lng,
                 radius_meters: 5000
             })
 
@@ -132,7 +132,6 @@ export async function searchRide(req, res) {
             .insert(dispatchRows)
 
         if (dispatchError) {
-
             console.error("Error dispatching ride:", dispatchError)
             return res.status(500).json({ success: false, message: "Failed to dispatch ride" })
         }

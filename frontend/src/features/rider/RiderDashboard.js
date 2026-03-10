@@ -5,6 +5,7 @@ import RideStatusCard from "./RideStatusCard";
 import RideStatusTimeline from "./RideStatusTimeline";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { rideService } from "@/services/ride.service";
+import { realtimeService } from "@/lib/realtime";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -74,77 +75,27 @@ const RiderDashboard = () => {
     useEffect(() => {
         if (!user?.id) return;
 
-        const channel = supabase
-            .channel(`rides-${user.id}`)
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "rides",
-                    filter: `rider_id=eq.${user.id}`
-                },
-                async (payload) => {
-                    console.log("Ride update received:", payload);
-                    if (payload.eventType === "DELETE") {
-                        setActiveRide(null);
-                        setPickup(null);
-                        setDrop(null);
-                        setDriverLocation(null);
-                    } else {
-                        // If it becomes ACCEPTED or state change requires refresh
-                        if (payload.new.status === "ACCEPTED" ||
-                            (payload.new.status !== activeRide?.status && !payload.new.driver)) {
-                            const detail = await rideService.getRideById(payload.new.id);
-                            if (detail.success) {
-                                setActiveRide(detail.ride);
-                                return;
-                            }
-                        }
-                        setActiveRide(payload.new);
-                    }
+        const channel = realtimeService.subscribeToRideUpdates(user.id, "rider_id", async (updatedRide) => {
+            console.log("Ride update received (Rider):", updatedRide);
+
+            // If it becomes ACCEPTED or state change requires refresh (to get driver details)
+            if (updatedRide.status === "ACCEPTED" ||
+                (updatedRide.status !== activeRide?.status && !updatedRide.driver)) {
+                const detail = await rideService.getRideById(updatedRide.id);
+                if (detail.success) {
+                    setActiveRide(detail.ride);
+                    return;
                 }
-            )
-            .subscribe();
+            }
+            setActiveRide(updatedRide);
+        });
 
         return () => {
-            supabase.removeChannel(channel);
+            realtimeService.unsubscribe(channel);
         };
     }, [user?.id, activeRide?.id, activeRide?.status]);
 
-    // 3. Real-time subscription for driver location updates
-    useEffect(() => {
-        const driverId = activeRide?.driver_id;
-        const status = activeRide?.status;
-
-        if (!driverId || !["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
-            setDriverLocation(null);
-            return;
-        }
-
-        const channel = supabase
-            .channel(`driver-loc-${driverId}`)
-            .on(
-                "postgres_changes",
-                {
-                    event: "UPDATE",
-                    schema: "public",
-                    table: "driver_profiles",
-                    filter: `user_id=eq.${driverId}`
-                },
-                (payload) => {
-                    if (payload.new.location) {
-                        const loc = parsePoint(payload.new.location);
-                        if (loc) setDriverLocation(loc);
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [activeRide?.driver_id, activeRide?.status]);
+    // 3. Removed: Driver location subscription moved to MapContainer.js
 
     const handleRideConfirm = async (rideData) => {
         setIsSubmitting(true);
@@ -213,7 +164,7 @@ const RiderDashboard = () => {
                         onLocationSelect={handleLocationSelect}
                         pickup={activeRide ? { lat: activeRide.pickup_lat, lng: activeRide.pickup_lng } : pickup}
                         drop={activeRide ? { lat: activeRide.dropoff_lat, lng: activeRide.dropoff_lng } : drop}
-                        driverLocation={driverLocation}
+                        driverId={activeRide?.driver_id}
                         status={activeRide?.status || "IDLE"}
                     />
                 </div>

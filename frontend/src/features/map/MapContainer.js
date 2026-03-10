@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMapEvents } from "react-leaflet";
 import { createMarker } from "@/utils/map.utils";
 import gsap from "gsap";
+import { realtimeService } from "@/lib/realtime";
 
 /**
  * Internal component to handle map click events.
@@ -30,33 +31,53 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 /**
  * MapContainer feature component that wraps MapView and handles interaction.
  */
-const MapContainer = ({ onLocationSelect, pickup, drop, driverLocation, status = "IDLE", ...props }) => {
-    const driverMarkerRef = React.useRef(null);
-    const [smoothDriverLoc, setSmoothDriverLoc] = React.useState(driverLocation);
+const MapContainer = ({ onLocationSelect, pickup, drop, driverId, status = "IDLE", ...props }) => {
+    const [smoothDriverLoc, setSmoothDriverLoc] = React.useState(null);
 
-    // Smoothly interpolate driver location using GSAP
+    // Parse PostGIS point string (SRID=4326;POINT(lng lat))
+    const parsePoint = (pointStr) => {
+        if (!pointStr) return null;
+        try {
+            const match = pointStr.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+            if (match) {
+                return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+            }
+        } catch (e) {
+            console.error("Failed to parse point:", pointStr);
+        }
+        return null;
+    };
+
+    // Handle Real-time Driver Location Subscription
     React.useEffect(() => {
-        if (!driverLocation) {
+        if (!driverId || !["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
             setSmoothDriverLoc(null);
             return;
         }
 
-        if (!smoothDriverLoc) {
-            setSmoothDriverLoc(driverLocation);
-            return;
-        }
-
-        const obj = { lat: smoothDriverLoc.lat, lng: smoothDriverLoc.lng };
-        gsap.to(obj, {
-            lat: driverLocation.lat,
-            lng: driverLocation.lng,
-            duration: 1.5,
-            ease: "power2.out",
-            onUpdate: () => {
-                setSmoothDriverLoc({ lat: obj.lat, lng: obj.lng });
+        const channel = realtimeService.subscribeToDriverLocation(driverId, (payload) => {
+            if (payload.location) {
+                const loc = parsePoint(payload.location);
+                if (loc) {
+                    // Start smooth transition
+                    const obj = { lat: smoothDriverLoc?.lat || loc.lat, lng: smoothDriverLoc?.lng || loc.lng };
+                    gsap.to(obj, {
+                        lat: loc.lat,
+                        lng: loc.lng,
+                        duration: 1.5,
+                        ease: "power2.out",
+                        onUpdate: () => {
+                            setSmoothDriverLoc({ lat: obj.lat, lng: obj.lng });
+                        }
+                    });
+                }
             }
         });
-    }, [driverLocation]);
+
+        return () => {
+            realtimeService.unsubscribe(channel);
+        };
+    }, [driverId, status]);
 
     const handleMapClick = (latlng) => {
         if (!onLocationSelect || status !== "IDLE") return;
