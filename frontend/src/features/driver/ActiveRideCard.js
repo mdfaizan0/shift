@@ -123,6 +123,10 @@ export default function ActiveRideCard({ ride }) {
                 newOtp[index] = "";
                 setOtp(newOtp);
             }
+        } else if (e.key === "Enter") {
+            if (otpString.length === 4) {
+                handleStartRide();
+            }
         }
     };
 
@@ -134,7 +138,7 @@ export default function ActiveRideCard({ ride }) {
     ];
 
     return (
-        <Card className="w-full shadow-xl border-primary/10 bg-card/95 backdrop-blur-md">
+        <Card className="w-full shadow-xl border-primary/10 bg-card">
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                     <CardTitle className="text-lg font-bold flex items-center gap-2">

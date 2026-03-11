@@ -66,7 +66,7 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
     };
 
     return (
-        <Card className="w-full shadow-2xl border-primary/10 bg-card/95 backdrop-blur-md transition-all duration-500">
+        <Card className="w-full shadow-2xl border-primary/10 bg-card transition-all duration-500">
             <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />

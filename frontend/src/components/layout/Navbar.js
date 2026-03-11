@@ -111,7 +111,7 @@ const Navbar = () => {
     ];
 
     return (
-        <nav className="sticky top-0 z-1000 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <nav className="sticky top-0 z-50 w-full border-b bg-background">
             <Container>
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center gap-8">
@@ -147,7 +147,9 @@ const Navbar = () => {
                         {!isLoading && (
                             <>
                                 {user ? (
-                                    <UserMenu user={user} role={role} handleSignOut={handleSignOut} />
+                                    <div className="hidden md:block">
+                                        <UserMenu user={user} role={role} handleSignOut={handleSignOut} />
+                                    </div>
                                 ) : (
                                     <div className="hidden md:flex items-center gap-4">
                                         <Button variant="ghost" asChild>
@@ -161,42 +163,6 @@ const Navbar = () => {
                             </>
                         )}
 
-                        {/* Mobile Menu */}
-                        <div className="flex md:hidden">
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="md:hidden">
-                                        <Menu className="h-5 w-5" />
-                                        <span className="sr-only">Toggle menu</span>
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="right" className="flex flex-col gap-4">
-                                    <SheetTitle className="text-left">Menu</SheetTitle>
-                                    <div className="mt-8 flex flex-col gap-4">
-                                        {navLinks.map((link) => (
-                                            <Link
-                                                key={link.name}
-                                                href={link.href}
-                                                className="flex items-center gap-2 text-lg font-medium"
-                                            >
-                                                <link.icon className="h-5 w-5" />
-                                                {link.name}
-                                            </Link>
-                                        ))}
-                                        {!user && (
-                                            <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
-                                                <Button variant="ghost" asChild className="justify-start">
-                                                    <Link href="/login">Login</Link>
-                                                </Button>
-                                                <Button asChild className="justify-start">
-                                                    <Link href="/register">Register</Link>
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-                        </div>
                     </div>
                 </div>
             </Container>

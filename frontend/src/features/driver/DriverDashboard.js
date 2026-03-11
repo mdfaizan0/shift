@@ -6,7 +6,7 @@ import DriverAvailabilityCard from "./DriverAvailabilityCard";
 import { DriverProvider, useDriver } from "./DriverProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { IndianRupee, History, Star, Radio } from "lucide-react";
+import { IndianRupee, Star, Radio } from "lucide-react";
 import DispatchListener from "./dispatch/DispatchListener";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import ActiveRideCard from "./ActiveRideCard";
@@ -79,23 +79,8 @@ const DriverDashboardInternal = () => {
                     </Card>
                 </div>
 
-                <section>
-                    <Card className="border-dashed">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                <History className="h-4 w-4" />
-                                Recent Activity
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-center py-6 text-muted-foreground">
-                                <p className="text-sm">No recent rides found.</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </section>
 
-                <div className="hidden md:block flex-1 bg-linear-to-t from-muted/50 to-transparent rounded-xl border border-dashed p-6 text-center">
+                <div className="hidden md:block bg-linear-to-t from-muted/50 to-transparent rounded-xl border border-dashed p-6 text-center">
                     <p className="text-sm text-muted-foreground italic">
                         &quot;Drive responsibly. Your safety and the rider's safety are paramount.&quot;
                     </p>

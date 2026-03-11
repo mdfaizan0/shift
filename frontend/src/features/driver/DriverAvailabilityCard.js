@@ -23,7 +23,7 @@ const DriverAvailabilityCard = () => {
     }
 
     return (
-        <Card className="w-full shadow-2xl border-primary/10 overflow-hidden bg-card/95 backdrop-blur-md">
+        <Card className="w-full shadow-2xl border-primary/10 overflow-hidden bg-card">
             <div className={`h-2 w-full transition-colors duration-700 ${isAvailable ? "bg-green-500" : isOnline ? "bg-orange-500" : "bg-destructive"}`} />
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">

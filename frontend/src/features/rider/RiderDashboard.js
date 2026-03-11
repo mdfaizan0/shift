@@ -15,6 +15,7 @@ const RiderDashboard = () => {
     const [activeRide, setActiveRide] = useState(null);
     const [driverLocation, setDriverLocation] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const handleLocationSelect = useCallback((type, coords) => {
         if (activeRide) return; // Prevent selection during active ride
@@ -74,6 +75,8 @@ const RiderDashboard = () => {
                 }
             } catch (err) {
                 console.error("Error checking active ride:", err);
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -143,19 +146,32 @@ const RiderDashboard = () => {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] w-full">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-muted-foreground animate-pulse font-medium">Syncing Rider's Dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
             {/* Sidebar / Controls Overlay */}
             <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
-                <section>
-                    <RideBookingCard
-                        pickup={pickup}
-                        drop={drop}
-                        onConfirm={handleRideConfirm}
-                        isSubmitting={isSubmitting}
-                        isLocked={!!activeRide}
-                    />
-                </section>
+                {!activeRide && (
+                    <section>
+                        <RideBookingCard
+                            pickup={pickup}
+                            drop={drop}
+                            onConfirm={handleRideConfirm}
+                            isSubmitting={isSubmitting}
+                            isLocked={false}
+                        />
+                    </section>
+                )}
 
                 {activeRide && (
                     <section className="animate-in fade-in slide-in-from-left-4 duration-500">
@@ -170,7 +186,7 @@ const RiderDashboard = () => {
                     />
                 </section>
 
-                <div className="hidden md:block flex-1 bg-linear-to-t from-muted/50 to-transparent rounded-xl border border-dashed p-6 text-center">
+                <div className="hidden md:block bg-linear-to-t from-muted/50 to-transparent rounded-xl border border-dashed p-6 text-center">
                     <p className="text-sm text-muted-foreground italic">
                         &quot;Your safety is our priority. Always check the taxi license before boarding.&quot;
                     </p>
