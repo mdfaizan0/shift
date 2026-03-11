@@ -66,7 +66,7 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
     };
 
     return (
-        <Card className="w-full shadow-lg border-primary/20 transition-all duration-300">
+        <Card className="w-full shadow-2xl border-primary/10 bg-card/95 backdrop-blur-md transition-all duration-500">
             <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />
@@ -80,7 +80,7 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
                         <Input
                             id="pickup"
                             placeholder="Click on the map to set pickup"
-                            className="pl-9 bg-muted/20"
+                            className="pl-9 bg-secondary/50 dark:bg-muted/20 border-border focus:ring-primary/20 transition-all"
                             value={formatCoords(pickup)}
                             readOnly
                             disabled={isLocked}
@@ -95,7 +95,7 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
                         <Input
                             id="dropoff"
                             placeholder="Click on the map to set dropoff"
-                            className="pl-9 bg-muted/20"
+                            className="pl-9 bg-secondary/50 dark:bg-muted/20 border-border focus:ring-primary/20 transition-all"
                             value={formatCoords(drop)}
                             readOnly
                             disabled={isLocked}
@@ -112,7 +112,7 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
                             {isLoading ? (
                                 <Skeleton className="h-6 w-20" />
                             ) : (
-                                <Badge variant="secondary" className="text-lg px-3 py-1 bg-primary/10 text-primary border-primary/20">
+                                <Badge variant="secondary" className="text-lg px-4 py-1.5 bg-primary/15 dark:bg-primary/10 text-primary border-primary/20 shadow-sm">
                                     ₹{estimate.estimated_fare}
                                 </Badge>
                             )}

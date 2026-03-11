@@ -315,10 +315,31 @@ export async function enrouteRide(req, res) {
 }
 
 export async function startRide(req, res) {
-    const { id } = req.params
-    const { otp } = req.body
+    const { id } = req.params;
+    const { otp } = req.body;
+
     try {
         const { data: ride, error: rideError } = await supabase
+            .from("rides")
+            .select()
+            .eq("id", id)
+            .eq("driver_id", req.user.id)
+            .neq("rider_id", req.user.id)
+            .single();
+
+        if (rideError || !ride) {
+            return res.status(404).json({ success: false, message: "Ride not found" });
+        }
+
+        if (ride.status !== "DRIVER_EN_ROUTE") {
+            return res.status(400).json({ success: false, message: "Ride is not in DRIVER_EN_ROUTE state" });
+        }
+
+        if (ride.otp_code !== otp) {
+            return res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
+        }
+
+        const { data: updatedRide, error: updateError } = await supabase
             .from("rides")
             .update({
                 status: "STARTED",
@@ -328,26 +349,20 @@ export async function startRide(req, res) {
             .eq("id", id)
             .eq("status", "DRIVER_EN_ROUTE")
             .eq("driver_id", req.user.id)
-            .eq("otp_code", otp)
             .neq("rider_id", req.user.id)
             .select()
-            .single()
+            .single();
 
-        if (rideError) {
-            console.error("Error starting ride:", rideError)
-            return res.status(500).json({ success: false, message: "Failed to start ride" })
+        if (updateError || !updatedRide) {
+            return res.status(500).json({ success: false, message: "Failed to start ride" });
         }
 
-        if (!ride) {
-            return res.status(400).json({ success: false, message: "Ride not found or not in DRIVER_EN_ROUTE state" })
-        }
+        const { otp_code, ...cleanedRide } = updatedRide;
+        return res.status(200).json({ success: true, message: "Ride started successfully", ride: cleanedRide });
 
-        const { otp_code, ...cleanedRide } = ride
-
-        return res.status(200).json({ success: true, message: "Ride started successfully", ride: cleanedRide })
     } catch (error) {
-        console.error("Error starting ride:", error)
-        return res.status(500).json({ success: false, message: "Failed to start ride", error: error.message })
+        console.error("Error starting ride:", error);
+        return res.status(500).json({ success: false, message: "Failed to start ride", error: error.message });
     }
 }
 
@@ -739,6 +754,64 @@ export async function getRideHistory(req, res) {
     } catch (error) {
         console.error("Error fetching ride history:", error)
         return res.status(500).json({ success: false, message: "Failed to fetch ride history", error: error.message })
+    }
+}
+
+export async function getActiveRide(req, res) {
+    const userId = req.user.id;
+    const { as: role } = req.query;
+
+    if (!["rider", "driver"].includes(role)) {
+        return res.status(400).json({ success: false, message: "Query parameter 'as' must be either 'rider' or 'driver'" });
+    }
+
+    const activeStatuses = role === "rider"
+        ? ["REQUESTED", "SEARCHING", "ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"]
+        : ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"];
+
+    try {
+        let query = supabase
+            .from("rides")
+            .select(`
+                *,
+                rider:rider_id (
+                    id,
+                    name,
+                    email,
+                    rider_avg_rating,
+                    rider_rating_count
+                ),
+                driver:driver_id (
+                    id,
+                    name,
+                    email,
+                    driver_avg_rating,
+                    driver_rating_count,
+                    profile:driver_profiles (
+                        vehicle_number,
+                        license_number
+                    )
+                )
+            `)
+            .in("status", activeStatuses);
+
+        if (role === "rider") {
+            query = query.eq("rider_id", userId);
+        } else {
+            query = query.eq("driver_id", userId);
+        }
+
+        const { data: ride, error } = await query.maybeSingle();
+
+        if (error) {
+            console.error("Error fetching active ride:", error);
+            return res.status(500).json({ success: false, message: "Failed to fetch active ride" });
+        }
+
+        return res.status(200).json({ success: true, ride });
+    } catch (error) {
+        console.error("Error fetching active ride:", error);
+        return res.status(500).json({ success: false, message: "Error fetching active ride", error: error.message });
     }
 }
 

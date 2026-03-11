@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { driverService } from "@/services/driver.service";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { realtimeService } from "@/lib/realtime";
+import { rideService } from "@/services/ride.service";
 
 const DriverContext = createContext(undefined);
 
@@ -36,16 +37,10 @@ export const DriverProvider = ({ children }) => {
                 setIsAvailable(data.driver.is_available);
                 statusRef.current = data.driver.is_online ? "ONLINE" : "OFFLINE";
 
-                // 2. Fetch Active Ride directly from Supabase to ensure persistence
-                const { data: ride, error: rideError } = await realtimeService.supabase
-                    .from("rides")
-                    .select("*, driver:driver_id(*, profile:driver_profiles(*))")
-                    .eq("driver_id", data.driver.user_id)
-                    .in("status", ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"])
-                    .maybeSingle();
-
-                if (ride) {
-                    setActiveRide(ride);
+                // 2. Fetch Active Ride via API to ensure persistence
+                const rideData = await rideService.getActiveRide("driver");
+                if (rideData.success && rideData.ride) {
+                    setActiveRide(rideData.ride);
                 } else {
                     setActiveRide(null);
                 }
@@ -131,7 +126,19 @@ export const DriverProvider = ({ children }) => {
 
                     // 2. Auto-Online if visible but DB says offline
                     if (!dbOnline) {
-                        await goOnline();
+                        try {
+                            await driverService.goOnline();
+                            setIsOnline(true);
+                            statusRef.current = "ONLINE";
+                        } catch (e) {
+                            console.error("Auto-online failed:", e);
+                        }
+                    }
+
+                    // 3. Fetch Active Ride for persistence via API
+                    const rideData = await rideService.getActiveRide("driver");
+                    if (rideData.success && rideData.ride) {
+                        setActiveRide(rideData.ride);
                     }
                 }
             } catch (error) {
@@ -154,8 +161,6 @@ export const DriverProvider = ({ children }) => {
         if (role !== "DRIVER" || !driverProfile?.id) return;
 
         const channel = realtimeService.subscribeToRideUpdates(driverProfile.id, "driver_id", (updatedRide) => {
-            console.log("Ride update received (Driver):", updatedRide);
-            // We refresh the profile/stats to ensure all related states are in sync
             fetchDriverStats();
         });
 

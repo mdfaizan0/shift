@@ -32,7 +32,6 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
  * MapContainer feature component that wraps MapView and handles interaction.
  */
 const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverLocation, offeredPickups = [], status = "IDLE", ...props }) => {
-    console.log("MapContainer Render. driverId:", driverId, "status:", status, "initialLoc:", initialDriverLocation);
     const [smoothDriverLoc, setSmoothDriverLoc] = React.useState(initialDriverLocation || null);
 
     // Update smooth location if initial location is provided (e.g. after fetch)
@@ -87,15 +86,12 @@ const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverL
 
     // Handle Real-time Driver Location Subscription
     React.useEffect(() => {
-        console.log("Location tracking effect. driverId:", driverId, "status:", status);
         if (!driverId || !["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
-            console.log("Location tracking skipped (guard condition triggered)");
             setSmoothDriverLoc(null);
             return;
         }
 
         const channel = realtimeService.subscribeToDriverLocation(driverId, (payload) => {
-            console.log("Driver location update received!", payload);
             if (payload.location) {
                 const loc = parsePoint(payload.location);
                 if (loc) {

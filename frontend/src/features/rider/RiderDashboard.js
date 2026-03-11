@@ -6,7 +6,6 @@ import RideStatusTimeline from "./RideStatusTimeline";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { rideService } from "@/services/ride.service";
 import { realtimeService } from "@/lib/realtime";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const RiderDashboard = () => {
@@ -14,7 +13,6 @@ const RiderDashboard = () => {
     const [pickup, setPickup] = useState(null);
     const [drop, setDrop] = useState(null);
     const [activeRide, setActiveRide] = useState(null);
-    console.log("RiderDashboard Render. activeRide status:", activeRide?.status, "driverId:", activeRide?.driver_id);
     const [driverLocation, setDriverLocation] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,16 +64,9 @@ const RiderDashboard = () => {
 
         const checkActiveRide = async () => {
             try {
-                const { data, error } = await supabase
-                    .from("rides")
-                    .select("*, driver:driver_id(*, profile:driver_profiles(*))")
-                    .eq("rider_id", user.id)
-                    .not("status", "in", '("COMPLETED","CANCELLED")')
-                    .order("created_at", { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                if (data) {
+                const res = await rideService.getActiveRide("rider");
+                if (res.success && res.ride) {
+                    const data = res.ride;
                     setActiveRide(data);
                     if (data.driver?.profile?.location) {
                         setDriverLocation(parsePoint(data.driver.profile.location));

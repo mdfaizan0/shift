@@ -8,7 +8,34 @@ import { driverService } from "@/services/driver.service";
 export const useDriverLocation = (isOnline) => {
     const watchId = useRef(null);
     const lastUpdateRef = useRef(0);
-    const UPDATE_INTERVAL = 10000; // 10 seconds
+    const UPDATE_INTERVAL = 5000; // 5 seconds
+
+    const sendUpdate = async (position, isManual = false) => {
+        const now = Date.now();
+        // Update if it's manual, first one, or throttled by 5s
+        if (isManual || now - lastUpdateRef.current >= UPDATE_INTERVAL || lastUpdateRef.current === 0) {
+            try {
+                const { latitude, longitude } = position.coords;
+                await driverService.locationUpdate({
+                    lat: latitude,
+                    lng: longitude
+                });
+                lastUpdateRef.current = now;
+            } catch (error) {
+                console.error("Failed to update driver location:", error);
+            }
+        }
+    };
+
+    const refreshLocation = () => {
+        if (!isOnline) return;
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => sendUpdate(pos, true),
+            (err) => console.error("Manual geolocation refresh error:", err),
+            { enableHighAccuracy: true }
+        );
+    };
 
     useEffect(() => {
         if (!isOnline) {
@@ -19,31 +46,13 @@ export const useDriverLocation = (isOnline) => {
             return;
         }
 
-        const sendUpdate = async (position) => {
-            const now = Date.now();
-            // Immediate update if it's the first one, or throttle by 10s
-            if (now - lastUpdateRef.current >= UPDATE_INTERVAL || lastUpdateRef.current === 0) {
-                try {
-                    const { latitude, longitude } = position.coords;
-                    await driverService.locationUpdate({
-                        lat: latitude,
-                        lng: longitude
-                    });
-                    lastUpdateRef.current = now;
-                    console.log("Location update sent:", { latitude, longitude });
-                } catch (error) {
-                    console.error("Failed to update driver location:", error);
-                }
-            }
-        };
-
         const handleError = (error) => {
             console.error("Geolocation error:", error);
         };
 
         // Watch position for continuous tracking, but sendUpdate throttles the actual API calls
         watchId.current = navigator.geolocation.watchPosition(
-            sendUpdate,
+            (pos) => sendUpdate(pos),
             handleError,
             {
                 enableHighAccuracy: true,
@@ -58,4 +67,6 @@ export const useDriverLocation = (isOnline) => {
             }
         };
     }, [isOnline]);
+
+    return { refreshLocation };
 };

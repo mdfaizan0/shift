@@ -15,7 +15,7 @@ export async function goOnline(req, res) {
             .maybeSingle()
 
         if (driverError) {
-            console.log("Error updating driver status:", driverError)
+            console.error("Error updating driver status:", driverError)
             return res.status(500).json({ success: false, message: "Failed to update driver status" })
         }
 
@@ -25,7 +25,7 @@ export async function goOnline(req, res) {
 
         return res.status(200).json({ success: true, message: "Driver is now online", driver })
     } catch (error) {
-        console.log("Error updating driver status:", error)
+        console.error("Error updating driver status:", error)
         return res.status(500).json({ success: false, message: "Failed to update driver status" })
     }
 }
@@ -57,7 +57,7 @@ export async function goOffline(req, res) {
             .maybeSingle()
 
         if (driverError) {
-            console.log("Error updating driver status:", driverError)
+            console.error("Error updating driver status:", driverError)
             return res.status(500).json({ success: false, message: "Failed to update driver status" })
         }
 
@@ -67,7 +67,7 @@ export async function goOffline(req, res) {
 
         return res.status(200).json({ success: true, message: "Driver is now offline", driver })
     } catch (error) {
-        console.log("Error updating driver status:", error)
+        console.error("Error updating driver status:", error)
         return res.status(500).json({ success: false, message: "Failed to update driver status" })
     }
 }
@@ -96,7 +96,7 @@ export async function locationUpdate(req, res) {
             .maybeSingle()
 
         if (driverError) {
-            console.log("Error updating driver location:", driverError)
+            console.error("Error updating driver location:", driverError)
             return res.status(500).json({ success: false, message: "Failed to update driver location" })
         }
 
@@ -106,7 +106,7 @@ export async function locationUpdate(req, res) {
 
         return res.status(200).json({ success: true, message: "Driver location updated successfully", driver })
     } catch (error) {
-        console.log("Error updating driver location:", error)
+        console.error("Error updating driver location:", error)
         return res.status(500).json({ success: false, message: "Failed to update driver location" })
     }
 }
@@ -130,7 +130,7 @@ export async function getDriverEarnings(req, res) {
             .eq("payment_status", "PAID")
 
         if (ridesError) {
-            console.log("Error fetching driver earnings:", ridesError)
+            console.error("Error fetching driver earnings:", ridesError)
             return res.status(500).json({ success: false, message: "Failed to fetch driver earnings" })
         }
 
@@ -178,7 +178,7 @@ export async function getDriverEarnings(req, res) {
             },
         })
     } catch (error) {
-        console.log("Error fetching driver earnings:", error)
+        console.error("Error fetching driver earnings:", error)
         return res.status(500).json({ success: false, message: "Failed to fetch driver earnings" })
     }
 }
@@ -193,7 +193,7 @@ export async function getDriverProfile(req, res) {
             .maybeSingle()
 
         if (driverError) {
-            console.log("Error fetching driver profile:", driverError)
+            console.error("Error fetching driver profile:", driverError)
             return res.status(500).json({ success: false, message: "Failed to fetch driver profile" })
         }
 
@@ -203,7 +203,7 @@ export async function getDriverProfile(req, res) {
 
         return res.status(200).json({ success: true, message: "Driver profile fetched successfully", driver })
     } catch (error) {
-        console.log("Error fetching driver profile:", error)
+        console.error("Error fetching driver profile:", error)
         return res.status(500).json({ success: false, message: "Failed to fetch driver profile" })
     }
 }
@@ -217,7 +217,7 @@ export async function toggleAvailability(req, res) {
             .maybeSingle()
 
         if (error) {
-            console.log("Error updating driver availability:", error)
+            console.error("Error updating driver availability:", error)
             return res.status(500).json({ success: false, message: "Failed to update driver availability" })
         }
 
@@ -227,7 +227,7 @@ export async function toggleAvailability(req, res) {
             is_available: data
         })
     } catch (error) {
-        console.log("Error updating driver availability:", error)
+        console.error("Error updating driver availability:", error)
         return res.status(500).json({ success: false, message: "Failed to update driver availability" })
     }
 }

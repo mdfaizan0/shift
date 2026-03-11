@@ -5,7 +5,8 @@ import MapContainer from "@/features/map/MapContainer";
 import DriverAvailabilityCard from "./DriverAvailabilityCard";
 import { DriverProvider, useDriver } from "./DriverProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IndianRupee, History, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { IndianRupee, History, Star, Radio } from "lucide-react";
 import DispatchListener from "./dispatch/DispatchListener";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import ActiveRideCard from "./ActiveRideCard";
@@ -14,11 +15,22 @@ import ActiveRideCard from "./ActiveRideCard";
  * Inner dashboard component that consumes DriverProvider.
  */
 const DriverDashboardInternal = () => {
-    const { isOnline, isAvailable, activeRide } = useDriver();
+    const { isOnline, isAvailable, activeRide, isLoading } = useDriver();
     const [activeOffers, setActiveOffers] = React.useState([]);
 
     // Track and broadcast location while online
-    useDriverLocation(isOnline);
+    const { refreshLocation } = useDriverLocation(isOnline);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] w-full">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-muted-foreground animate-pulse font-medium">Syncing Captain's Dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
@@ -29,11 +41,23 @@ const DriverDashboardInternal = () => {
 
             {/* Sidebar / Controls Overlay */}
             <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
-                <section>
+                <section className="relative group">
                     {activeRide ? (
                         <ActiveRideCard ride={activeRide} />
                     ) : (
                         <DriverAvailabilityCard />
+                    )}
+
+                    {isOnline && (
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="absolute -top-3 -right-3 h-8 w-8 rounded-full shadow-md z-20 hover:scale-110 active:scale-95 transition-all p-0"
+                            onClick={refreshLocation}
+                            title="Force Location Update"
+                        >
+                            <Radio className="h-4 w-4 text-primary animate-pulse" />
+                        </Button>
                     )}
                 </section>
 

@@ -23,8 +23,8 @@ const DriverAvailabilityCard = () => {
     }
 
     return (
-        <Card className="w-full shadow-lg border-primary/20 overflow-hidden">
-            <div className={`h-2 w-full transition-colors duration-500 ${isAvailable ? "bg-green-500" : isOnline ? "bg-amber-500" : "bg-red-500"}`} />
+        <Card className="w-full shadow-2xl border-primary/10 overflow-hidden bg-card/95 backdrop-blur-md">
+            <div className={`h-2 w-full transition-colors duration-700 ${isAvailable ? "bg-green-500" : isOnline ? "bg-orange-500" : "bg-destructive"}`} />
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                     <div className="space-y-1">
@@ -47,9 +47,11 @@ const DriverAvailabilityCard = () => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-2">
-                <div className="p-4 rounded-lg bg-muted/30 border border-dashed flex items-center gap-3">
-                    <InfoIcon className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                <div className="p-4 rounded-xl bg-secondary/50 dark:bg-muted/30 border border-border flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                        <InfoIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="text-sm text-foreground/80 font-medium leading-relaxed">
                         {isAvailable
                             ? `${getTimeOfDay()}! You are ready to take rides.`
                             : isOnline

@@ -119,4 +119,13 @@ export const rideService = {
         const response = await api.get(`/rides/history?as=${role}`);
         return response.data;
     },
+    /**
+     * Fetches the current active ride for a specific role.
+     * @param {string} role - 'rider' or 'driver'
+     * @returns {Promise<object>} Active ride data
+     */
+    getActiveRide: async (role) => {
+        const response = await api.get(`/rides/active?as=${role}`);
+        return response.data;
+    },
 };

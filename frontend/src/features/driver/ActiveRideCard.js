@@ -36,18 +36,13 @@ export default function ActiveRideCard({ ride }) {
                 setActiveRide(res.ride);
                 refreshStats();
             } else {
-                // Task 4: Error handling
                 setOtp(["", "", "", ""]);
                 document.getElementById("otp-0")?.focus();
             }
         } catch (error) {
             console.error("Failed to start ride:", error);
-            // Task 4: Error handling on failure
             setOtp(["", "", "", ""]);
             document.getElementById("otp-0")?.focus();
-            if (error.response?.data?.message) {
-                toast.error(error.response.data.message);
-            }
         } finally {
             setIsLoading(false);
         }
@@ -111,7 +106,6 @@ export default function ActiveRideCard({ ride }) {
         newOtp[index] = val[val.length - 1];
         setOtp(newOtp);
 
-        // Auto focus next
         if (index < 3) {
             document.getElementById(`otp-${index + 1}`)?.focus();
         }
@@ -140,7 +134,7 @@ export default function ActiveRideCard({ ride }) {
     ];
 
     return (
-        <Card className="w-full shadow-lg border-primary/20 bg-background/95 backdrop-blur-sm">
+        <Card className="w-full shadow-xl border-primary/10 bg-card/95 backdrop-blur-md">
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                     <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -153,14 +147,13 @@ export default function ActiveRideCard({ ride }) {
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                {/* Task 3: Progress Indicator */}
                 <div className="flex items-center justify-between mb-6 px-1">
                     {steps.map((step, i) => (
                         <React.Fragment key={step.label}>
                             <div className="flex flex-col items-center gap-1.5 relative">
-                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${step.done ? "bg-green-500 text-white" :
-                                        step.active ? "bg-primary text-white scale-110 shadow-lg shadow-primary/30" :
-                                            "bg-muted text-muted-foreground"
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${step.done ? "bg-green-600 text-white shadow-md shadow-green-600/20" :
+                                    step.active ? "bg-primary text-white scale-110 shadow-lg shadow-primary/30 ring-4 ring-primary/10" :
+                                        "bg-secondary text-muted-foreground border border-border"
                                     }`}>
                                     {step.done ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
                                 </div>
@@ -170,7 +163,7 @@ export default function ActiveRideCard({ ride }) {
                                 </span>
                             </div>
                             {i < steps.length - 1 && (
-                                <div className={`flex-1 h-0.5 mx-2 mb-4 transition-colors duration-500 ${steps[i + 1].active ? "bg-green-500" : "bg-muted"
+                                <div className={`flex-1 h-0.5 mx-2 mb-4 transition-colors duration-700 rounded-full ${steps[i + 1].active ? "bg-green-500" : "bg-border"
                                     }`} />
                             )}
                         </React.Fragment>
@@ -197,10 +190,10 @@ export default function ActiveRideCard({ ride }) {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-secondary/50 dark:bg-muted/30 border border-border/50 rounded-xl">
                     <div className="flex items-center gap-2">
                         <IndianRupee className="h-4 w-4 text-green-600" />
-                        <span className="font-bold">₹{ride.fare}</span>
+                        <span className="font-bold">{ride.fare}</span>
                     </div>
                     {ride.rider && (
                         <div className="flex items-center gap-2 text-sm">
