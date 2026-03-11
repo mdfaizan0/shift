@@ -16,6 +16,7 @@ const RiderDashboard = () => {
     const [driverLocation, setDriverLocation] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [routeInfo, setRouteInfo] = useState(null);
 
     const handleLocationSelect = useCallback((type, coords) => {
         if (activeRide) return; // Prevent selection during active ride
@@ -183,6 +184,7 @@ const RiderDashboard = () => {
                     <RideStatusCard
                         status={activeRide?.status || "IDLE"}
                         rideData={activeRide}
+                        routeInfo={routeInfo}
                     />
                 </section>
 
@@ -204,6 +206,7 @@ const RiderDashboard = () => {
                         driverId={activeRide?.driver_id}
                         initialDriverLocation={driverLocation}
                         status={activeRide?.status || "IDLE"}
+                        onRouteInfo={setRouteInfo}
                     />
                 </div>
             </div>

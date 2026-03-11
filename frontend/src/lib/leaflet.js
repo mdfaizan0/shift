@@ -1,4 +1,6 @@
 import L from "leaflet";
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 export const configureLeafletIcons = () => {
     delete L.Icon.Default.prototype._getIconUrl;

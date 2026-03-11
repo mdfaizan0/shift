@@ -17,9 +17,10 @@ import ActiveRideCard from "./ActiveRideCard";
 const DriverDashboardInternal = () => {
     const { isOnline, isAvailable, activeRide, isLoading } = useDriver();
     const [activeOffers, setActiveOffers] = React.useState([]);
+    const [routeInfo, setRouteInfo] = React.useState(null);
 
     // Track and broadcast location while online
-    const { refreshLocation } = useDriverLocation(isOnline);
+    const { refreshLocation, currentLocation } = useDriverLocation(isOnline);
 
     if (isLoading) {
         return (
@@ -43,7 +44,7 @@ const DriverDashboardInternal = () => {
             <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
                 <section className="relative group">
                     {activeRide ? (
-                        <ActiveRideCard ride={activeRide} />
+                        <ActiveRideCard ride={activeRide} routeInfo={routeInfo} />
                     ) : (
                         <DriverAvailabilityCard />
                     )}
@@ -106,6 +107,8 @@ const DriverDashboardInternal = () => {
                             lng: activeRide.dropoff_lng
                         } : null}
                         status={activeRide ? activeRide.status : "IDLE"}
+                        initialDriverLocation={currentLocation}
+                        onRouteInfo={setRouteInfo}
                     />
                 </div>
             </div>

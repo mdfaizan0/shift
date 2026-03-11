@@ -9,7 +9,7 @@ import { Car, Clock, ShieldCheck, User, MapPin, IndianRupee } from "lucide-react
  * RideStatusCard - Professional Live Dashboard for Rider.
  * Focuses on high-contrast labels, clear grouping, and sophisticated clean design.
  */
-const RideStatusCard = ({ status = "IDLE", rideData }) => {
+const RideStatusCard = ({ status = "IDLE", rideData, routeInfo }) => {
     const renderStatusBadge = () => {
         const badgeClass = "text-[10px] font-black uppercase tracking-widest border-none px-3 py-1 shadow-sm";
         switch (status) {
@@ -65,6 +65,22 @@ const RideStatusCard = ({ status = "IDLE", rideData }) => {
                     </div>
                 ) : isLive ? (
                     <div className="flex flex-col gap-4 animate-in slide-in-from-bottom-2 duration-500">
+                        {/* Route Info */}
+                        {routeInfo && (
+                            <div className="flex items-center justify-between px-2 pt-1 border-border/30">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    <span className="text-[10px] font-bold tracking-widest uppercase">
+                                        {status === "STARTED" ? "To Destination" : "Captain Arrival"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm font-black text-foreground">{routeInfo.eta} <span className="text-[10px] text-muted-foreground font-bold tracking-widest">MIN</span></span>
+                                    <span className="text-[10px] font-bold tracking-widest text-muted-foreground border-l border-border/50 pl-3">{routeInfo.distance?.toFixed(1)} KM</span>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Compact Driver & PIN Row */}
                         <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border/40">
                             <div className="flex items-center gap-3">

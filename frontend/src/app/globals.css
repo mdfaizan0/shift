@@ -6,28 +6,22 @@
 
 :root {
   --background: oklch(0.99 0.005 210);
-  /* Brighter, crisp near-white */
   --foreground: oklch(0.15 0.02 210);
-  /* Sharper depth for readability */
   --card: #ffffff;
   --card-foreground: oklch(0.15 0.02 210);
   --popover: #ffffff;
   --popover-foreground: oklch(0.15 0.02 210);
   --primary: #fe7f01;
-  /* Signature Shift Orange */
   --primary-foreground: #ffffff;
   --secondary: oklch(0.96 0.005 210);
-  /* Clean light grey-blue */
   --secondary-foreground: oklch(0.3 0.02 210);
   --muted: oklch(0.97 0.005 210);
   --muted-foreground: oklch(0.45 0.02 210);
   --accent: oklch(0.94 0.03 45);
-  /* Subtle warm accent */
   --accent-foreground: #ca3500;
   --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: #ffffff;
   --border: oklch(0.92 0.01 210);
-  /* Extremely thin, soft borders */
   --input: oklch(0.92 0.01 210);
 
   --ring: #fe9a37;
@@ -193,7 +187,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #3b82f6;
+  background-color: var(--primary);
   /* Default primary */
   border: 2px solid white;
   z-index: 2;
@@ -203,7 +197,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 4px solid #3b82f6;
+  border: 4px solid var(--primary);
   border-radius: 50%;
   animation: marker-pulse 2s ease-out infinite;
   opacity: 0;

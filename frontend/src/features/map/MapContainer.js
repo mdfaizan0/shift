@@ -4,8 +4,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMapEvents } from "react-leaflet";
-import { createMarker } from "@/utils/map.utils";
-import gsap from "gsap";
+import { createMarker, haversineDistance, estimateETA, calculateBearing } from "@/utils/map.utils";
 import { realtimeService } from "@/lib/realtime";
 
 /**
@@ -31,21 +30,28 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 /**
  * MapContainer feature component that wraps MapView and handles interaction.
  */
-const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverLocation, offeredPickups = [], status = "IDLE", ...props }) => {
+const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverLocation, offeredPickups = [], status = "IDLE", onRouteInfo, ...props }) => {
     const [smoothDriverLoc, setSmoothDriverLoc] = React.useState(initialDriverLocation || null);
+    const [followEnabled, setFollowEnabled] = React.useState(true);
+    const [routeInfo, setRouteInfo] = React.useState(null);
+    const [driverBearing, setDriverBearing] = React.useState(0);
+    const driverAnimRef = React.useRef(null);
 
-    // Update smooth location if initial location is provided (e.g. after fetch)
+    // Sync smooth location with initialDriverLocation (used on driver side where
+    // the driver's own geolocation is passed directly, not via realtime subscription)
     React.useEffect(() => {
-        if (initialDriverLocation && !smoothDriverLoc) {
+        if (initialDriverLocation) {
+            if (smoothDriverLoc && (smoothDriverLoc.lat !== initialDriverLocation.lat || smoothDriverLoc.lng !== initialDriverLocation.lng)) {
+                setDriverBearing(calculateBearing(smoothDriverLoc.lat, smoothDriverLoc.lng, initialDriverLocation.lat, initialDriverLocation.lng));
+            }
             setSmoothDriverLoc(initialDriverLocation);
         }
-    }, [initialDriverLocation]);
+    }, [initialDriverLocation?.lat, initialDriverLocation?.lng]);
 
     // Parse PostGIS location (supports both WKT string and WKB HEX)
     const parsePoint = (point) => {
         if (!point) return null;
 
-        // Case 1: WKT String (e.g. "POINT(lng lat)" or "SRID=4326;POINT(lng lat)")
         if (typeof point === 'string' && point.includes('POINT')) {
             try {
                 const match = point.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
@@ -57,24 +63,13 @@ const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverL
             }
         }
 
-        // Case 2: WKB HEX (e.g. "0101000020E6100000...")
-        // Standard PostGIS EWKB for Point(4326): 
-        // 01 (Little Endian) + 01000020 (Type) + E6100000 (SRID 4326) + Lng (8 bytes) + Lat (8 bytes)
         if (typeof point === 'string' && /^[0-9A-F]+$/i.test(point) && point.length >= 50) {
             try {
-                // Convert HEX to ArrayBuffer
                 const buffer = new Uint8Array(point.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
                 const view = new DataView(buffer);
                 const isLittleEndian = view.getUint8(0) === 1;
-
-                // Offset 21: Lng starts (8 bytes for double)
-                // Offset 29: Lat starts (8 bytes for double)
-                // Note: Standard WKB is 1 + 4 + 8 + 8 = 21 bytes. 
-                // EWKB (with SRID) is 1 + 4 + 4 + 8 + 8 = 25 bytes.
-                // Your hex is 50 chars = 25 bytes.
                 const lng = view.getFloat64(9, isLittleEndian);
                 const lat = view.getFloat64(17, isLittleEndian);
-
                 return { lat, lng };
             } catch (e) {
                 console.error("Failed to parse WKB HEX point:", e);
@@ -84,36 +79,68 @@ const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverL
         return null;
     };
 
-    // Handle Real-time Driver Location Subscription
+    // Handle Real-time Driver Location Subscription with smooth CSS transitions
     React.useEffect(() => {
-        if (!driverId || !["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
+        if (!["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
             setSmoothDriverLoc(null);
             return;
         }
+
+        if (!driverId) return; // Driver side: location is managed by initialDriverLocation
 
         const channel = realtimeService.subscribeToDriverLocation(driverId, (payload) => {
             if (payload.location) {
                 const loc = parsePoint(payload.location);
                 if (loc) {
-                    // Start smooth transition
-                    const obj = { lat: smoothDriverLoc?.lat || loc.lat, lng: smoothDriverLoc?.lng || loc.lng };
-                    gsap.to(obj, {
-                        lat: loc.lat,
-                        lng: loc.lng,
-                        duration: 1.5,
-                        ease: "power2.out",
-                        onUpdate: () => {
-                            setSmoothDriverLoc({ lat: obj.lat, lng: obj.lng });
+                    // Use requestAnimationFrame-based smooth interpolation
+                    const startLoc = (smoothDriverLoc && smoothDriverLoc.lat != null) ? { lat: smoothDriverLoc.lat, lng: smoothDriverLoc.lng } : { lat: loc.lat, lng: loc.lng };
+                    
+                    // Update bearing if the position actually changed
+                    if (startLoc.lat !== loc.lat || startLoc.lng !== loc.lng) {
+                        setDriverBearing(calculateBearing(startLoc.lat, startLoc.lng, loc.lat, loc.lng));
+                    }
+
+                    const startTime = performance.now();
+                    const duration = 1500; // ms
+
+                    // Cancel any previous animation
+                    if (driverAnimRef.current) {
+                        cancelAnimationFrame(driverAnimRef.current);
+                    }
+
+                    const animate = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        // Ease-out cubic
+                        const eased = 1 - Math.pow(1 - progress, 3);
+
+                        const lat = startLoc.lat + (loc.lat - startLoc.lat) * eased;
+                        const lng = startLoc.lng + (loc.lng - startLoc.lng) * eased;
+
+                        setSmoothDriverLoc({ lat, lng });
+
+                        if (progress < 1) {
+                            driverAnimRef.current = requestAnimationFrame(animate);
                         }
-                    });
+                    };
+
+                    driverAnimRef.current = requestAnimationFrame(animate);
                 }
             }
         });
 
         return () => {
+            if (driverAnimRef.current) cancelAnimationFrame(driverAnimRef.current);
             realtimeService.unsubscribe(channel);
         };
     }, [driverId, status]);
+
+    // Re-enable follow mode when a new ride becomes active
+    React.useEffect(() => {
+        if (["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
+            setFollowEnabled(true);
+        }
+    }, [status]);
 
     const handleMapClick = (latlng) => {
         if (!onLocationSelect || status !== "IDLE") return;
@@ -128,33 +155,75 @@ const MapContainer = ({ onLocationSelect, pickup, drop, driverId, initialDriverL
         }
     };
 
-    // Construct markers from coordinates based on status
+    // Route state logic
+    const isLive = ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status);
+    let routeFrom = null;
+    let routeTo = null;
 
+    if (isLive && smoothDriverLoc && pickup) {
+        if (status === "STARTED") {
+            // During ride: pickup → drop
+            routeFrom = pickup;
+            routeTo = drop;
+        } else {
+            // Driver en route: driver → pickup
+            routeFrom = smoothDriverLoc;
+            routeTo = pickup;
+        }
+    }
+
+    // Handle route info from routing machine
+    const handleRouteFound = React.useCallback((info) => {
+        setRouteInfo(info);
+        if (onRouteInfo) onRouteInfo(info);
+    }, [onRouteInfo]);
+
+    // Fallback distance/ETA using haversine when no routing result yet
+    React.useEffect(() => {
+        if (routeInfo) return; // We have real data
+        if (!routeFrom || !routeTo) return;
+
+        const dist = haversineDistance(routeFrom.lat, routeFrom.lng, routeTo.lat, routeTo.lng);
+        const eta = estimateETA(dist);
+        const fallback = { distance: dist, eta, isFallback: true };
+        if (onRouteInfo) onRouteInfo(fallback);
+    }, [routeFrom?.lat, routeFrom?.lng, routeTo?.lat, routeTo?.lng, routeInfo]);
+
+    // Construct markers
     const markers = [];
 
-    // Pickup is always shown if it exists
     if (pickup) markers.push(createMarker(pickup.lat, pickup.lng, "pickup"));
 
-    // Dropoff only shown during booking or when ride is active (ACCEPTED onwards)
-    if (drop && (status === "IDLE" || ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status))) {
+    if (drop && (status === "IDLE" || isLive)) {
         markers.push(createMarker(drop.lat, drop.lng, "drop"));
     }
 
-    // Driver Marker shown when ride is accepted but not yet completed
-    if (smoothDriverLoc && ["ACCEPTED", "DRIVER_EN_ROUTE", "STARTED"].includes(status)) {
-        markers.push(createMarker(smoothDriverLoc.lat, smoothDriverLoc.lng, "driver_marker", "driver"));
+    if (smoothDriverLoc && isLive) {
+        markers.push(createMarker(smoothDriverLoc.lat, smoothDriverLoc.lng, "driver_marker", "driver", { bearing: driverBearing }));
     }
 
-    // Task 5: Offered Pickups (pulsing markers)
     if (offeredPickups && offeredPickups.length > 0 && status === "IDLE") {
         offeredPickups.forEach(off => {
             markers.push(createMarker(off.lat, off.lng, off.id, "pickup_offer"));
         });
     }
 
+    // Center target for the center button
+    const centerTarget = isLive && smoothDriverLoc ? smoothDriverLoc : null;
+
     return (
         <div className="relative w-full h-[400px] md:h-[600px] rounded-xl overflow-hidden border shadow-sm">
-            <MapView markers={markers} {...props}>
+            <MapView
+                markers={markers.filter(m => m.lat != null && m.lng != null && !isNaN(m.lat) && !isNaN(m.lng))}
+                routeFrom={routeFrom}
+                routeTo={routeTo}
+                onRouteFound={handleRouteFound}
+                followPosition={smoothDriverLoc}
+                followEnabled={isLive && followEnabled}
+                onFollowDisable={() => setFollowEnabled(false)}
+                centerTarget={centerTarget}
+                {...props}
+            >
                 <MapClickHandler onClick={handleMapClick} />
             </MapView>
         </div>

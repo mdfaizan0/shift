@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MapPin, IndianRupee, Navigation, Phone, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { MapPin, IndianRupee, Navigation, Phone, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 import { rideService } from "@/services/ride.service";
 import { toast } from "sonner";
 import { useDriver } from "./DriverProvider";
 
-export default function ActiveRideCard({ ride }) {
+export default function ActiveRideCard({ ride, routeInfo }) {
     const { refreshStats, setActiveRide } = useDriver();
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [isLoading, setIsLoading] = useState(false);
@@ -175,6 +175,20 @@ export default function ActiveRideCard({ ride }) {
                 </div>
 
                 <div className="space-y-3">
+                    {routeInfo && !isCompleted && (
+                        <div className="flex items-center justify-between px-2 pb-2 border-b border-border/40">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span className="text-[10px] font-bold tracking-widest uppercase">
+                                    {isStarted ? "To Dropoff" : "To Pickup"}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-black text-foreground">{routeInfo.eta} <span className="text-[10px] text-muted-foreground font-bold tracking-widest">MIN</span></span>
+                                <span className="text-[10px] font-bold tracking-widest text-muted-foreground border-l border-border/50 pl-3">{routeInfo.distance?.toFixed(1)} KM</span>
+                            </div>
+                        </div>
+                    )}
                     <div className="flex gap-3">
                         <div className="flex flex-col items-center pt-1">
                             <div className="h-2.5 w-2.5 rounded-full bg-primary" />
