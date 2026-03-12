@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, Check } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,7 @@ import { rideService } from "@/services/ride.service";
 const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) => {
     const [estimate, setEstimate] = React.useState(null);
     const [isLoading, setIsLoading] = React.useState(false);
+    const [paymentMethod, setPaymentMethod] = React.useState("CASH");
 
     const formatCoords = (coords) => {
         if (!coords) return "";
@@ -60,7 +61,8 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
                 pickup_lat: pickup.lat,
                 pickup_lng: pickup.lng,
                 dropoff_lat: drop.lat,
-                dropoff_lng: drop.lng
+                dropoff_lng: drop.lng,
+                payment_method: paymentMethod
             });
         }
     };
@@ -130,6 +132,34 @@ const RideBookingCard = ({ pickup, drop, onConfirm, isSubmitting, isLocked }) =>
                                 Base fare applied
                             </Badge>
                         )}
+                    </div>
+                )}
+
+                {!isLocked && (
+                    <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Label className="mb-2 block text-xs font-bold text-muted-foreground uppercase tracking-wider">Payment Method</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div 
+                                className={`border rounded-xl p-3 cursor-pointer flex items-center justify-between transition-all duration-300 ${paymentMethod === 'CASH' ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm' : 'border-border hover:bg-muted/50'}`}
+                                onClick={() => setPaymentMethod('CASH')}
+                            >
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="text-sm font-bold text-foreground">Cash</span>
+                                    <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">Pay Captain</span>
+                                </div>
+                                {paymentMethod === 'CASH' && <Check className="h-4 w-4 text-primary animate-in zoom-in duration-300" />}
+                            </div>
+                            <div 
+                                className={`border rounded-xl p-3 cursor-pointer flex items-center justify-between transition-all duration-300 ${paymentMethod === 'RAZORPAY' ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm' : 'border-border hover:bg-muted/50'}`}
+                                onClick={() => setPaymentMethod('RAZORPAY')}
+                            >
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="text-sm font-bold text-foreground">Razorpay</span>
+                                    <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">UPI / Card</span>
+                                </div>
+                                {paymentMethod === 'RAZORPAY' && <Check className="h-4 w-4 text-primary animate-in zoom-in duration-300" />}
+                            </div>
+                        </div>
                     </div>
                 )}
 

@@ -22,6 +22,6 @@ router.post("/:id/review", requireAuth(), authMiddleware, rideController.reviewR
 
 router.get('/active', requireAuth(), authMiddleware, rideController.getActiveRide);
 router.get('/:id', requireAuth(), authMiddleware, rideController.getRideById);
-router.get("/history", requireAuth(), authMiddleware, rideController.getRideHistory)
+router.get("/history/:as", requireAuth(), authMiddleware, rideController.getRideHistory)
 
 export default router;

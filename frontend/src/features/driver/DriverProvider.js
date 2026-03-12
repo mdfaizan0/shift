@@ -37,13 +37,23 @@ export const DriverProvider = ({ children }) => {
                 setIsAvailable(data.driver.is_available);
                 statusRef.current = data.driver.is_online ? "ONLINE" : "OFFLINE";
 
-                // 2. Fetch Active Ride via API to ensure persistence
+                // 2. Fetch ActiveRide via API
+                let currentRide = null;
                 const rideData = await rideService.getActiveRide("driver");
                 if (rideData.success && rideData.ride) {
-                    setActiveRide(rideData.ride);
+                    currentRide = rideData.ride;
                 } else {
-                    setActiveRide(null);
+                    // Look for COMPLETED but unpaid rides in history
+                    const history = await rideService.getRideHistory("driver");
+                    const unpaidRide = history.rides?.find(r => r.status === "COMPLETED" && r.payment_status === "PENDING");
+                    if (unpaidRide) {
+                        const fullRideData = await rideService.getRideById(unpaidRide.id);
+                        if (fullRideData.success && fullRideData.ride) {
+                            currentRide = fullRideData.ride;
+                        }
+                    }
                 }
+                setActiveRide(currentRide);
             }
         } catch (error) {
             console.error("Failed to fetch driver profile:", error);
@@ -136,10 +146,22 @@ export const DriverProvider = ({ children }) => {
                     }
 
                     // 3. Fetch Active Ride for persistence via API
+                    let currentRide = null;
                     const rideData = await rideService.getActiveRide("driver");
                     if (rideData.success && rideData.ride) {
-                        setActiveRide(rideData.ride);
+                        currentRide = rideData.ride;
+                    } else {
+                        // Backend getActiveRide excludes COMPLETED. Check manually.
+                        const history = await rideService.getRideHistory("driver");
+                        const unpaidRide = history.rides?.find(r => r.status === "COMPLETED" && r.payment_status === "PENDING");
+                        if (unpaidRide) {
+                            const fullRideData = await rideService.getRideById(unpaidRide.id);
+                            if (fullRideData.success && fullRideData.ride) {
+                                currentRide = fullRideData.ride;
+                            }
+                        }
                     }
+                    setActiveRide(currentRide);
                 }
             } catch (error) {
                 console.error("Driver initialization failed:", error);
@@ -161,6 +183,10 @@ export const DriverProvider = ({ children }) => {
         if (role !== "DRIVER" || !driverProfile?.id) return;
 
         const channel = realtimeService.subscribeToRideUpdates(driverProfile.id, "driver_id", (updatedRide) => {
+            // Update immediately if possible, then fetch full sync to be safe
+            if (updatedRide && activeRide && updatedRide.id === activeRide.id) {
+                setActiveRide(prev => ({...prev, ...updatedRide}));
+            }
             fetchDriverStats();
         });
 

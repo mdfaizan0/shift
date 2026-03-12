@@ -66,12 +66,25 @@ const RiderDashboard = () => {
 
         const checkActiveRide = async () => {
             try {
+                let currentRide = null;
                 const res = await rideService.getActiveRide("rider");
                 if (res.success && res.ride) {
-                    const data = res.ride;
-                    setActiveRide(data);
-                    if (data.driver?.profile?.location) {
-                        setDriverLocation(parsePoint(data.driver.profile.location));
+                    currentRide = res.ride;
+                } else {
+                    const history = await rideService.getRideHistory("rider");
+                    const pendingRide = history.rides?.find(r => r.status === "COMPLETED" && (r.payment_status === "PENDING" || r.payment_status === "PROCESSING"));
+                    if (pendingRide) {
+                        const fullRideData = await rideService.getRideById(pendingRide.id);
+                        if (fullRideData.success && fullRideData.ride) {
+                            currentRide = fullRideData.ride;
+                        }
+                    }
+                }
+
+                if (currentRide) {
+                    setActiveRide(currentRide);
+                    if (currentRide.driver?.profile?.location) {
+                        setDriverLocation(parsePoint(currentRide.driver.profile.location));
                     }
                 }
             } catch (err) {
@@ -89,6 +102,9 @@ const RiderDashboard = () => {
         if (!user?.id) return;
 
         const channel = realtimeService.subscribeToRideUpdates(user.id, "rider_id", async (updatedRide) => {
+            // Immediate partial update to reflect payment status quickly
+            setActiveRide(prev => (prev && prev.id === updatedRide.id ? { ...prev, ...updatedRide } : updatedRide));
+
             // If it becomes ACCEPTED or state change requires refresh (to get driver details)
             if (updatedRide.status === "ACCEPTED" ||
                 (updatedRide.status !== activeRide?.status && !updatedRide.driver)) {
@@ -101,7 +117,6 @@ const RiderDashboard = () => {
                     return;
                 }
             }
-            setActiveRide(updatedRide);
         });
 
         return () => {
@@ -185,6 +200,7 @@ const RiderDashboard = () => {
                         status={activeRide?.status || "IDLE"}
                         rideData={activeRide}
                         routeInfo={routeInfo}
+                        onClose={() => setActiveRide(null)}
                     />
                 </section>
 

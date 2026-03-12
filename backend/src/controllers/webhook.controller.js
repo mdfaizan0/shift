@@ -6,7 +6,6 @@ export async function handleRazorpayWebhook(req, res) {
     const signature = req.headers["x-razorpay-signature"]
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
     const rawBody = req.body
-
     try {
         const expected_sign = crypto
             .createHmac("sha256", webhookSecret)

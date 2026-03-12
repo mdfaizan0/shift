@@ -39,7 +39,7 @@ export async function estimateRide(req, res) {
 }
 
 export async function createRide(req, res) {
-    const { rider_id, pickup_location, dropoff_location, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body
+    const { rider_id, pickup_location, dropoff_location, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, payment_method } = req.body
 
     try {
         const { data: fareData, error: fareError } = await supabase.rpc("calculate_fare", {
@@ -66,7 +66,8 @@ export async function createRide(req, res) {
                 pickup_lng,
                 dropoff_lat,
                 dropoff_lng,
-                fare: estimatedFare.toFixed(2)
+                fare: estimatedFare.toFixed(2),
+                payment_method
             })
             .select()
             .single();
@@ -449,17 +450,20 @@ export async function payForRide(req, res) {
 
         let order;
         try {
+            console.log("Receipt:", `receipt_${ride.id}`)
             order = await razorpay.orders.create({
                 amount: ride.fare * 100,
                 currency: "INR",
-                receipt: `receipt_${ride.id}`,
+                receipt: `receipt_${(ride.id).toString().slice(0, 8)}`,
                 notes: {
                     "ride_id": ride.id,
                     "rider_id": ride.rider_id,
                     "driver_id": ride.driver_id
                 }
             })
+            console.log("Order created:", order)
         } catch (error) {
+            console.error("Error creating payment order:", error)
             await supabase
                 .from("rides")
                 .update({ payment_status: "PENDING" })
@@ -713,7 +717,7 @@ export async function reviewRide(req, res) {
 }
 
 export async function getRideHistory(req, res) {
-    const { as: role } = req.query
+    const { as: role } = req.params
     const userId = req.user.id
 
     if (!["rider", "driver"].includes(role)) {
@@ -731,8 +735,7 @@ export async function getRideHistory(req, res) {
                 status,
                 payment_status,
                 created_at,
-                completed_at,
-                cancelled_at
+                completed_at
             `)
             .in("status", ["COMPLETED", "CANCELLED"])
             .order("created_at", { ascending: false })

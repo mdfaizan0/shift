@@ -116,7 +116,7 @@ export const rideService = {
      * @returns {Promise<object>} Ride history data
      */
     getRideHistory: async (role) => {
-        const response = await api.get(`/rides/history?as=${role}`);
+        const response = await api.get(`/rides/history/${role}`);
         return response.data;
     },
     /**
@@ -128,4 +128,35 @@ export const rideService = {
         const response = await api.get(`/rides/active?as=${role}`);
         return response.data;
     },
+
+    /**
+     * Marks a ride as paid (Cash).
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Status
+     */
+    markPaid: async (id) => {
+        const response = await api.post(`/rides/${id}/mark-paid`);
+        return response.data;
+    },
+
+    /**
+     * Triggers Razorpay payment order creation for a ride.
+     * @param {string} id - Ride ID
+     * @returns {Promise<object>} Order data (order_id, amount, currency, key_id)
+     */
+    payOrder: async (id) => {
+        const response = await api.post(`/rides/${id}/pay`);
+        return response.data;
+    },
+
+    /**
+     * Submits a review for a completed ride.
+     * @param {string} id - Ride ID
+     * @param {object} payload - { rating, comment }
+     * @returns {Promise<object>} Status
+     */
+    submitReview: async (id, payload) => {
+        const response = await api.post(`/rides/${id}/review`, payload);
+        return response.data;
+    }
 };

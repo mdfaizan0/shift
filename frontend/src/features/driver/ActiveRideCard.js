@@ -19,6 +19,7 @@ export default function ActiveRideCard({ ride, routeInfo }) {
     const isEnRoute = ride.status === "DRIVER_EN_ROUTE";
     const isStarted = ride.status === "STARTED";
     const isCompleted = ride.status === "COMPLETED";
+    const isPendingCash = isCompleted && ride.payment_method === "CASH" && ride.payment_status === "PENDING";
 
     const otpString = otp.join("");
 
@@ -70,11 +71,28 @@ export default function ActiveRideCard({ ride, routeInfo }) {
             const res = await rideService.completeRide(ride.id);
             if (res.success) {
                 toast.success("Ride completed successfully!");
-                setActiveRide(null);
+                setActiveRide(res.ride);
                 refreshStats();
             }
         } catch (error) {
             console.error("Failed to complete ride:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleMarkPaid = async () => {
+        setIsLoading(true);
+        try {
+            const res = await rideService.markPaid(ride.id);
+            if (res.success) {
+                toast.success("Payment marked as received.");
+                setActiveRide(null); // Now completely done
+                refreshStats();
+            }
+        } catch (error) {
+            console.error("Failed to mark as paid:", error);
+            toast.error("Failed to update payment status");
         } finally {
             setIsLoading(false);
         }
@@ -269,11 +287,16 @@ export default function ActiveRideCard({ ride, routeInfo }) {
                         Cancel Ride
                     </Button>
                 )}
-                {isCompleted && (
-                    <div className="w-full p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                {isCompleted && isPendingCash && (
+                    <Button className="w-full h-12 font-bold text-md bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20" onClick={handleMarkPaid} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="animate-spin mr-2" /> : "Mark as Paid"}
+                    </Button>
+                )}
+                {isCompleted && !isPendingCash && (
+                    <div className="w-full p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center animate-in zoom-in duration-300">
                         <p className="text-green-600 font-bold flex items-center justify-center gap-2">
                             <CheckCircle2 className="h-5 w-5" />
-                            Ride Completed
+                            {ride.payment_status === "PENDING" ? "Awaiting Payment..." : "Ride Completed & Paid"}
                         </p>
                     </div>
                 )}
