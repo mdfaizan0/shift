@@ -78,10 +78,6 @@ export const DriverProvider = ({ children }) => {
     }, []);
 
     const goOffline = useCallback(async () => {
-        // Optimization: if we're calling this during a teardown/logout flow, 
-        // we might not want to set loading state in react if unmounting.
-        // But for consistency we keep it.
-        setIsLoading(true);
         try {
             const data = await driverService.goOffline();
             if (data.success) {
@@ -93,14 +89,11 @@ export const DriverProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Failed to go offline:", error);
-        } finally {
-            setIsLoading(false);
         }
         return false;
     }, []);
 
     const toggleAvailability = useCallback(async () => {
-        setIsLoading(true);
         try {
             const data = await driverService.toggleAvailability();
             if (data.success) {
@@ -110,8 +103,6 @@ export const DriverProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Failed to toggle availability:", error);
-        } finally {
-            setIsLoading(false);
         }
         return false;
     }, []);
