@@ -450,9 +450,8 @@ export async function payForRide(req, res) {
 
         let order;
         try {
-            console.log("Receipt:", `receipt_${ride.id}`)
             order = await razorpay.orders.create({
-                amount: ride.fare * 100,
+                amount: Math.round(ride.fare * 100),
                 currency: "INR",
                 receipt: `receipt_${(ride.id).toString().slice(0, 8)}`,
                 notes: {
@@ -461,7 +460,6 @@ export async function payForRide(req, res) {
                     "driver_id": ride.driver_id
                 }
             })
-            console.log("Order created:", order)
         } catch (error) {
             console.error("Error creating payment order:", error)
             await supabase
