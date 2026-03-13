@@ -34,12 +34,7 @@ export const AuthProvider = ({ children }) => {
             const response = await api.get("/users/me", { skipToast: true });
             if (response.data.success) {
                 const userData = response.data.user;
-                setUser({
-                    id: userData.id,
-                    name: userData.name,
-                    email: userData.email,
-                    imageUrl: userData.imageUrl || null
-                });
+                setUser({ ...userData, imageUrl: userData.image_url || null });
                 setRole(userData.role);
             }
         } catch (error) {

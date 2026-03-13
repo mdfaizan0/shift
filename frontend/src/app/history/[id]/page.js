@@ -126,7 +126,7 @@ const RideDetailPage = () => {
                     {/* Passenger/Driver Info Block */}
                     <section className="bg-muted/30 rounded-2xl p-6 border border-border/10">
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">
-                            {role === "rider" ? "Captain Details" : "Passenger Details"}
+                            {role.toLowerCase() === "rider" ? "Captain Details" : "Passenger Details"}
                         </p>
                         {otherUser ? (
                             <div className="flex items-center gap-4">
@@ -226,10 +226,10 @@ const RideDetailPage = () => {
                             </div>
                         )}
 
-                        <Button variant="outline" disabled className="w-full h-11 text-xs font-bold rounded-xl border-dashed">
+                        {role?.toLowerCase() === "rider" && <Button variant="outline" disabled className="w-full h-11 text-xs font-bold rounded-xl border-dashed">
                             <Download className="mr-2 h-3.5 w-3.5" />
                             Download Invoice PDF
-                        </Button>
+                        </Button>}
                     </section>
                 </div>
 

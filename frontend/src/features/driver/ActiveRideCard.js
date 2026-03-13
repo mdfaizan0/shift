@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MapPin, IndianRupee, Navigation, Phone, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
+import { MapPin, IndianRupee, Navigation, Phone, CheckCircle2, XCircle, Loader2, Clock, Star } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { rideService } from "@/services/ride.service";
 import { toast } from "sonner";
 import { useDriver } from "./DriverProvider";
@@ -20,6 +21,46 @@ export default function ActiveRideCard({ ride, routeInfo }) {
     const isStarted = ride.status === "STARTED";
     const isCompleted = ride.status === "COMPLETED";
     const isPendingCash = isCompleted && ride.payment_method === "CASH" && ride.payment_status === "PENDING";
+    const isFullyDone = isCompleted && (ride.payment_method !== "CASH" || ride.payment_status === "PAID");
+
+    const [reviewOpen, setReviewOpen] = useState(false);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState("");
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+    // Trigger review dialog when ride is fully done
+    React.useEffect(() => {
+        if (isFullyDone && !reviewOpen) {
+            setReviewOpen(true);
+        }
+    }, [isFullyDone]);
+
+    const handleSkipReview = () => {
+        setReviewOpen(false);
+        setActiveRide(null); // Clear active ride after review/skip
+    };
+
+    const handleSubmitReview = async () => {
+        setIsSubmittingReview(true);
+        try {
+            const res = await rideService.submitReview(ride.id, { rating, comment });
+            if (res.success) {
+                toast.success("Passenger rated! Thank you.");
+                setReviewOpen(false);
+                setActiveRide(null);
+            }
+        } catch (error) {
+            console.error("Review error:", error);
+            if (error?.response?.data?.message?.includes("already reviewed")) {
+                setReviewOpen(false);
+                setActiveRide(null);
+            } else {
+                toast.error("Failed to submit review");
+            }
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
 
     const otpString = otp.join("");
 
@@ -301,6 +342,50 @@ export default function ActiveRideCard({ ride, routeInfo }) {
                     </div>
                 )}
             </CardFooter>
+
+            {/* Review Dialog */}
+            <Dialog open={reviewOpen} onOpenChange={(open) => { if(!open) handleSkipReview() }}>
+                <DialogContent className="sm:max-w-md bg-card border-border/50 text-foreground animate-in zoom-in-95 duration-300">
+                    <DialogHeader className="text-center sm:text-center space-y-3">
+                        <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Star className="h-6 w-6 text-primary fill-primary" />
+                        </div>
+                        <DialogTitle className="text-2xl font-black">Rate Your Passenger</DialogTitle>
+                        <DialogDescription className="text-sm">
+                            How was your experience with {ride.rider?.name?.split(' ')[0] || "this passenger"}?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-6 flex flex-col items-center justify-center gap-6">
+                        <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => setRating(star)}
+                                    className="transition-transform hover:scale-110 focus:outline-none"
+                                >
+                                    <Star className={`h-10 w-10 ${star <= rating ? "text-primary fill-primary" : "text-muted fill-muted"} transition-colors`} />
+                                </button>
+                            ))}
+                        </div>
+                        <textarea 
+                            className="w-full h-24 p-3 rounded-xl border border-border/50 bg-secondary/20 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none transition-all"
+                            placeholder="Add an optional comment... (How was the behavior?)"
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            maxLength={500}
+                        />
+                    </div>
+                    <DialogFooter className="flex-col sm:flex-col gap-2">
+                        <Button className="w-full text-lg font-bold h-12 shadow-lg shadow-primary/20" onClick={handleSubmitReview} disabled={isSubmittingReview}>
+                            {isSubmittingReview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Submit Rating"}
+                        </Button>
+                        <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground" onClick={handleSkipReview}>
+                            Skip
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 }

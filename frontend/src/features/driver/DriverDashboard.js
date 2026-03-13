@@ -10,24 +10,39 @@ import { IndianRupee, Star, Radio } from "lucide-react";
 import DispatchListener from "./dispatch/DispatchListener";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import ActiveRideCard from "./ActiveRideCard";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Inner dashboard component that consumes DriverProvider.
  */
 const DriverDashboardInternal = () => {
-    const { isOnline, isAvailable, activeRide, isLoading } = useDriver();
+    const { isOnline, isAvailable, activeRide, isLoading: isDriverLoading } = useDriver();
+    const { user, isLoading: isAuthLoading } = useAuthUser();
+    const router = useRouter();
     const [activeOffers, setActiveOffers] = React.useState([]);
     const [routeInfo, setRouteInfo] = React.useState(null);
+
+    const isLoading = isDriverLoading || isAuthLoading;
 
     // Track and broadcast location while online
     const { refreshLocation, currentLocation } = useDriverLocation(isOnline);
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] w-full">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <p className="text-muted-foreground animate-pulse font-medium">Syncing Captain's Dashboard...</p>
+            <div className="flex flex-col md:flex-row gap-6 max-w-7xl mx-auto px-6 py-8">
+                <div className="w-full md:w-[400px] space-y-6">
+                    <Skeleton className="h-[200px] w-full rounded-2xl" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Skeleton className="h-[100px] w-full rounded-xl" />
+                        <Skeleton className="h-[100px] w-full rounded-xl" />
+                    </div>
+                    <Skeleton className="h-[120px] w-full rounded-xl" />
+                </div>
+                <div className="flex-1">
+                    <Skeleton className="h-[600px] w-full rounded-3xl" />
                 </div>
             </div>
         );
@@ -41,7 +56,12 @@ const DriverDashboardInternal = () => {
             )}
 
             {/* Sidebar / Controls Overlay */}
-            <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
+            <motion.div
+                className="w-full md:w-[400px] flex flex-col gap-6 z-10"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+            >
                 <section className="relative group">
                     {activeRide ? (
                         <ActiveRideCard ride={activeRide} routeInfo={routeInfo} />
@@ -64,18 +84,27 @@ const DriverDashboardInternal = () => {
 
                 {/* ... rest of the sidebar code ... */}
                 <div className="grid grid-cols-2 gap-4">
-                    <Card className="bg-muted/30 border-none shadow-none">
+                    <Card
+                        className="bg-muted/30 border-none shadow-none cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => router.push("/earnings")}
+                    >
                         <CardContent className="p-4 flex flex-col items-center text-center">
-                            <IndianRupee className="h-4 w-4 text-primary mb-2" />
-                            <span className="text-2xl font-bold">₹0</span>
-                            <span className="text-xs text-muted-foreground">Today's Earnings</span>
+                            <IndianRupee className="h-4 w-4 text-emerald-500 mb-2" />
+                            <span className="text-xl font-black text-foreground">₹--</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Earnings</span>
+                            <Button variant="link" className="h-4 p-0 text-[9px] font-bold text-primary mt-1 uppercase tracking-tight">View All</Button>
                         </CardContent>
                     </Card>
                     <Card className="bg-muted/30 border-none shadow-none">
                         <CardContent className="p-4 flex flex-col items-center text-center">
-                            <Star className="h-4 w-4 text-yellow-500 mb-2" />
-                            <span className="text-2xl font-bold">5.0</span>
-                            <span className="text-xs text-muted-foreground">Rating</span>
+                            <Star className="h-4 w-4 text-orange-400 fill-orange-400 mb-2" />
+                            <span className="text-xl font-black text-foreground">
+                                {user?.driver_rating_count > 0 ? user.driver_avg_rating.toFixed(1) : "New"}
+                            </span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Rating</span>
+                            <span className="text-[9px] font-bold text-muted-foreground/60 mt-1 uppercase tracking-tight">
+                                {user?.driver_rating_count || 0} Rides
+                            </span>
                         </CardContent>
                     </Card>
                 </div>
@@ -86,7 +115,7 @@ const DriverDashboardInternal = () => {
                         &quot;Drive responsibly. Your safety and the rider's safety are paramount.&quot;
                     </p>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Map Area */}
             <div className="flex-1 w-full order-first md:order-last">

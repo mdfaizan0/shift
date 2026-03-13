@@ -5,7 +5,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClerk } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Shield, ChevronRight, Settings, Mail } from "lucide-react";
+import { User, LogOut, Shield, ChevronRight, Settings, Mail, Clock, CreditCard, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /**
@@ -23,12 +23,22 @@ const ProfilePage = () => {
 
     if (!user) return null;
 
+    // Derived rating info based on role
+    const ratingInfo = role?.toLowerCase() === "driver" 
+        ? { avg: user.driver_avg_rating, count: user.driver_rating_count }
+        : { avg: user.rider_avg_rating, count: user.rider_rating_count };
+        
+    const ratingDisplay = ratingInfo.count > 0 
+        ? `${ratingInfo.avg?.toFixed(1)} (${ratingInfo.count})` 
+        : "New User";
+
     const email = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "";
 
     const options = [
-        { label: "App Settings", icon: Settings, color: "text-blue-500" },
-        { label: "Safety & Privacy", icon: Shield, color: "text-green-500" },
-        { label: "Connected Accounts", icon: Mail, color: "text-indigo-500" },
+        { label: "Ride History", icon: Clock, color: "text-primary", path: "/history" },
+        ...(role?.toLowerCase() === "driver" ? [{ label: "Earnings", icon: CreditCard, color: "text-emerald-500", path: "/earnings" }] : []),
+        { label: "App Settings", icon: Settings, color: "text-muted-foreground/60", path: "#" },
+        { label: "Safety & Privacy", icon: Shield, color: "text-muted-foreground/60", path: "#" },
     ];
 
     return (
@@ -51,6 +61,12 @@ const ProfilePage = () => {
                     {email && (
                         <p className="text-xs text-muted-foreground mb-1">{email}</p>
                     )}
+                    <div className="flex items-center justify-center gap-2 pt-1 pb-1">
+                        <div className="flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded-full border border-border/40">
+                            <Star className="h-3 w-3 text-orange-400 fill-orange-400" />
+                            <span className="text-[10px] font-bold text-foreground">{ratingDisplay}</span>
+                        </div>
+                    </div>
                     <div className="flex items-center justify-center gap-2 pt-1">
                         {role.toLowerCase() === "driver" && (
                             <Badge variant="outline" className="border-primary/20 text-primary font-bold uppercase tracking-widest text-[8px] py-0 px-2 h-4">
@@ -75,7 +91,8 @@ const ProfilePage = () => {
                         {options.map((opt, i) => (
                             <div 
                                 key={opt.label}
-                                className={`flex items-center justify-between p-3 px-4 hover:bg-secondary/30 transition-colors cursor-not-allowed ${
+                                onClick={() => opt.path !== "#" && router.push(opt.path)}
+                                className={`flex items-center justify-between p-4 px-5 hover:bg-secondary/30 transition-colors cursor-pointer ${
                                     i < options.length - 1 ? "border-b border-border/40" : ""
                                 }`}
                             >
@@ -103,7 +120,7 @@ const ProfilePage = () => {
                 </div>
                 
                 <p className="text-[10px] text-center text-muted-foreground/40 mt-4">
-                    v1.0.4 • 2026
+                    v1.0.0 • 2026
                 </p>
             </div>
         </div>

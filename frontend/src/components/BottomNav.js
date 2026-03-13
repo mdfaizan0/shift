@@ -18,7 +18,12 @@ const BottomNav = () => {
 
     const navItems = [
         { label: "Home", href: "/", icon: Home },
-        { label: "Profile", href: "/profile", icon: User },
+        { 
+            label: "Profile", 
+            href: "/profile", 
+            icon: User,
+            isActive: (path) => path === "/profile" || path.startsWith("/history") || path === "/earnings"
+        },
     ];
 
     return (
@@ -26,7 +31,7 @@ const BottomNav = () => {
             <nav className="bg-card/98 border border-border/40 shadow-xl rounded-full p-1.5 flex items-center gap-1">
                 {navItems.map((item) => {
                     const Icon = item.icon;
-                    const isActive = pathname === item.href;
+                    const isActive = item.isActive ? item.isActive(pathname) : pathname === item.href;
 
                     return (
                         <Link

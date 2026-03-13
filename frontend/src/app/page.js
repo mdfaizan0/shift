@@ -1,10 +1,6 @@
 "use client";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { Skeleton } from "@/components/ui/skeleton";
-import MapContainer from "@/features/map/MapContainer";
-import { createMarker } from "@/utils/map.utils";
-import { MAP_CONFIG } from "@/features/map/map.constants";
 import Container from "@/components/layout/Container";
 import AuthGuard from "@/components/auth/AuthGuard";
 import RiderDashboard from "@/features/rider/RiderDashboard";

@@ -7,6 +7,8 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { rideService } from "@/services/ride.service";
 import { realtimeService } from "@/lib/realtime";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const RiderDashboard = () => {
     const { user } = useAuthUser();
@@ -164,10 +166,13 @@ const RiderDashboard = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] w-full">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <p className="text-muted-foreground animate-pulse font-medium">Syncing Rider's Dashboard...</p>
+            <div className="flex flex-col md:flex-row gap-6 max-w-7xl mx-auto px-6 py-8">
+                <div className="w-full md:w-[400px] space-y-6">
+                    <Skeleton className="h-[300px] w-full rounded-2xl" />
+                    <Skeleton className="h-[120px] w-full rounded-xl" />
+                </div>
+                <div className="flex-1">
+                    <Skeleton className="h-[600px] w-full rounded-3xl" />
                 </div>
             </div>
         );
@@ -176,7 +181,12 @@ const RiderDashboard = () => {
     return (
         <div className="relative flex flex-col md:flex-row gap-6 min-h-[calc(100vh-10rem)]">
             {/* Sidebar / Controls Overlay */}
-            <div className="w-full md:w-[400px] flex flex-col gap-6 z-10">
+            <motion.div 
+                className="w-full md:w-[400px] flex flex-col gap-6 z-10"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+            >
                 {!activeRide && (
                     <section>
                         <RideBookingCard
@@ -209,7 +219,7 @@ const RiderDashboard = () => {
                         &quot;Your safety is our priority. Always check the taxi license before boarding.&quot;
                     </p>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Map Area */}
             <div className="flex-1 w-full order-first md:order-last">

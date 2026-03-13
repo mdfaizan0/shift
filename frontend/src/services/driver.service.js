@@ -48,5 +48,14 @@ export const driverService = {
     locationUpdate: async (coords) => {
         const response = await api.post("/driver/location-update", coords);
         return response.data;
+    },
+    
+    /**
+     * Fetches driver earning statistics.
+     * @returns {Promise<object>} Earnings data
+     */
+    getEarnings: async () => {
+        const response = await api.get("/driver/earnings");
+        return response.data;
     }
 };
