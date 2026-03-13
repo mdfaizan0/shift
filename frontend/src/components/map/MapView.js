@@ -137,6 +137,24 @@ function MapStatePersister() {
 }
 
 // ──────────────────────────────────────────────
+// FIT BOUNDS — auto-fit map to markers
+// ──────────────────────────────────────────────
+function FitBounds({ markers, enabled }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!enabled || !markers || markers.length === 0) return;
+
+        const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng]));
+        if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50], animate: true });
+        }
+    }, [markers, enabled, map]);
+
+    return null;
+}
+
+// ──────────────────────────────────────────────
 // MAP REF EXPOSER — provides map instance to parent
 // ──────────────────────────────────────────────
 function MapRefExposer({ onMapReady }) {
@@ -200,6 +218,8 @@ const MapView = ({
     onFollowDisable,
     onMapReady,
     centerTarget,
+    fitMarkers = false,
+    isPreview = false,
     children
 }) => {
     const { resolvedTheme } = useTheme();
@@ -211,6 +231,12 @@ const MapView = ({
     // Determine initial center via cascade: geolocation → localStorage → env → prop
     useEffect(() => {
         setMounted(true);
+
+        if (isPreview) {
+            setInitialCenter(propCenter || MAP_CONFIG.DEFAULT_CENTER);
+            setInitialZoom(propZoom || MAP_CONFIG.DEFAULT_ZOOM);
+            return;
+        }
 
         // 1. Try geolocation
         if (navigator.geolocation) {
@@ -243,7 +269,7 @@ const MapView = ({
                 setInitialZoom(propZoom || MAP_CONFIG.DEFAULT_ZOOM);
             }
         }
-    }, []);
+    }, [isPreview]);
 
     const isDark = mounted && resolvedTheme === "dark";
 
@@ -296,9 +322,12 @@ const MapView = ({
                     {/* Follow driver mode */}
                     <FollowMode
                         position={followPosition}
-                        enabled={followEnabled}
+                        enabled={followEnabled && !isPreview}
                         onDisable={onFollowDisable}
                     />
+
+                    {/* Auto-fit markers */}
+                    <FitBounds markers={markers} enabled={fitMarkers} />
 
                     {/* Markers */}
                     {markers.map((marker) => (
@@ -314,19 +343,21 @@ const MapView = ({
             </div>
 
             {/* Center Button — floating bottom-right */}
-            <button
-                onClick={handleCenterClick}
-                className="absolute bottom-4 right-4 z-1000 h-9 w-9 bg-card border border-border/50 rounded-full shadow-md flex items-center justify-center hover:bg-secondary/50 transition-colors active:scale-95 cursor-pointer"
-                title="Center map"
-            >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-foreground">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M12 2v4" />
-                    <path d="M12 18v4" />
-                    <path d="M2 12h4" />
-                    <path d="M18 12h4" />
-                </svg>
-            </button>
+            {!isPreview && (
+                <button
+                    onClick={handleCenterClick}
+                    className="absolute bottom-4 right-4 z-1000 h-9 w-9 bg-card border border-border/50 rounded-full shadow-md flex items-center justify-center hover:bg-secondary/50 transition-colors active:scale-95 cursor-pointer"
+                    title="Center map"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-foreground">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M12 2v4" />
+                        <path d="M12 18v4" />
+                        <path d="M2 12h4" />
+                        <path d="M18 12h4" />
+                    </svg>
+                </button>
+            )}
         </div>
     );
 };

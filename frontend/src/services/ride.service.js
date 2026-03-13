@@ -116,7 +116,7 @@ export const rideService = {
      * @returns {Promise<object>} Ride history data
      */
     getRideHistory: async (role) => {
-        const response = await api.get(`/rides/history/${role}`);
+        const response = await api.get(`/rides/history/${role.toLowerCase()}`);
         return response.data;
     },
     /**
@@ -125,7 +125,7 @@ export const rideService = {
      * @returns {Promise<object>} Active ride data
      */
     getActiveRide: async (role) => {
-        const response = await api.get(`/rides/active?as=${role}`);
+        const response = await api.get(`/rides/active?as=${role.toLowerCase()}`);
         return response.data;
     },
 

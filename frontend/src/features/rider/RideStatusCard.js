@@ -150,7 +150,7 @@ const RideStatusCard = ({ status = "IDLE", rideData, routeInfo, onClose }) => {
                     <div className="py-6 text-center space-y-2">
                         <Car className="h-5 w-5 mx-auto text-muted-foreground/30" />
                         <p className="text-xs text-muted-foreground font-medium">
-                            Awaiting booking.
+                            Awaiting booking
                         </p>
                     </div>
                 ) : (status === "REQUESTED" || status === "SEARCHING") ? (

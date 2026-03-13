@@ -641,6 +641,7 @@ export async function reviewRide(req, res) {
     const { id } = req.params
     const { rating, comment } = req.body
     const user_id = req.user.id
+
     if (!rating) {
         return res.status(400).json({ success: false, message: "Rating is required" })
     }
@@ -652,46 +653,56 @@ export async function reviewRide(req, res) {
     if (comment && comment.trim().length > 500) {
         return res.status(400).json({ success: false, message: "Comment must be less than 500 characters" })
     }
+
     try {
         const { data: ride, error: rideError } = await supabase
             .from("rides")
-            .select("*")
+            .select("id, rider_id, driver_id, status, payment_status")
             .eq("id", id)
             .single()
 
-        if (rideError) {
-            console.error("Error reviewing ride:", rideError)
-            return res.status(500).json({ success: false, message: "Failed to review ride" })
+        if (rideError || !ride) {
+            return res.status(404).json({ success: false, message: "Ride not found" })
         }
 
-        if (!ride) {
-            return res.status(400).json({ success: false, message: "Ride not found or not in COMPLETED state" })
-        }
+        const isRider  = ride.rider_id  === user_id
+        const isDriver = ride.driver_id === user_id
 
-        const isParticipant = ride.rider_id === user_id || ride.driver_id === user_id
-        const isReadyForReview = ride.status === "COMPLETED" && ride.payment_status === "PAID"
-
-        if (!isParticipant) {
+        if (!isRider && !isDriver) {
             return res.status(403).json({ success: false, message: "You are not a participant in this ride" })
         }
 
-        if (!isReadyForReview) {
+        if (isRider && (ride.status !== "COMPLETED" || ride.payment_status !== "PAID")) {
             return res.status(403).json({ success: false, message: "Ride must be COMPLETED and PAID to leave a review" })
         }
 
+        if (isDriver && ride.status !== "COMPLETED") {
+            return res.status(403).json({ success: false, message: "Ride must be COMPLETED to leave a review" })
+        }
 
-        const reviewee_id = ride.rider_id === user_id ? ride.driver_id : ride.rider_id
+        const reviewee_id = isRider ? ride.driver_id : ride.rider_id
 
         if (!reviewee_id) {
             return res.status(400).json({ success: false, message: "Invalid review target" })
         }
 
+        const { data: existingReview } = await supabase
+            .from("ride_reviews")
+            .select("id")
+            .eq("ride_id", id)
+            .eq("reviewer_id", user_id)
+            .single()
+
+        if (existingReview) {
+            return res.status(400).json({ success: false, message: "You have already reviewed this ride" })
+        }
+
         const { data: review, error: reviewError } = await supabase
             .from("ride_reviews")
             .insert({
-                ride_id: ride.id,
-                reviewee_id,
+                ride_id:     ride.id,
                 reviewer_id: user_id,
+                reviewee_id,
                 rating,
                 comment: comment ? comment.trim() : null
             })
@@ -699,15 +710,15 @@ export async function reviewRide(req, res) {
             .single()
 
         if (reviewError?.code === "23505") {
-            return res.status(400).json({ success: false, message: "You have already reviewed this ride" });
+            return res.status(400).json({ success: false, message: "You have already reviewed this ride" })
         }
 
         if (reviewError) {
-            console.error("Error reviewing ride:", reviewError)
-            return res.status(500).json({ success: false, message: "Failed to review ride" })
+            console.error("Error inserting review:", reviewError)
+            return res.status(500).json({ success: false, message: "Failed to submit review" })
         }
 
-        return res.status(200).json({ success: true, message: "Ride reviewed successfully", review })
+        return res.status(201).json({ success: true, message: "Review submitted successfully", review })
     } catch (error) {
         console.error("Error reviewing ride:", error)
         return res.status(500).json({ success: false, message: "Failed to review ride", error: error.message })
@@ -717,6 +728,8 @@ export async function reviewRide(req, res) {
 export async function getRideHistory(req, res) {
     const { as: role } = req.params
     const userId = req.user.id
+    console.log("role", role)
+    console.log("userId", userId)
 
     if (!["rider", "driver"].includes(role)) {
         return res.status(400).json({ success: false, message: "Query parameter 'as' must be either 'rider' or 'driver'" })
@@ -732,6 +745,7 @@ export async function getRideHistory(req, res) {
                 fare,
                 status,
                 payment_status,
+                payment_method,
                 created_at,
                 completed_at
             `)
