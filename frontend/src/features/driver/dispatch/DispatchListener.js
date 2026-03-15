@@ -19,10 +19,8 @@ export default function DispatchListener({ onOffersChange, activeRide }) {
     const [activeOffers, setActiveOffers] = useState([]);
     const seenDispatchIds = React.useRef(new Set());
 
-    // Subscribe to ride_dispatches
     useEffect(() => {
         if (!user?.id || activeRide || !isAvailable) {
-            // Clear offers if we're no longer eligible
             if (activeOffers.length > 0) {
                 setActiveOffers([]);
                 onOffersChange?.([]);

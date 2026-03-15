@@ -4,7 +4,7 @@ import React from "react";
 import MapContainer from "@/features/map/MapContainer";
 import DriverAvailabilityCard from "./DriverAvailabilityCard";
 import { DriverProvider, useDriver } from "./DriverProvider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IndianRupee, Star, Radio } from "lucide-react";
 import DispatchListener from "./dispatch/DispatchListener";

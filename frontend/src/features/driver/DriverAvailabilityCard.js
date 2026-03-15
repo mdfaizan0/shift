@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
 import { useDriver } from "./DriverProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Power, PowerOff, ShieldCheck, Car, Radio, InfoIcon } from "lucide-react";
+import { PowerOff, Car, Radio, InfoIcon } from "lucide-react";
 
 /**
  * Card for drivers to toggle their ride availability.

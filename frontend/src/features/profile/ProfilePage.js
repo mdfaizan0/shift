@@ -5,7 +5,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClerk } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Shield, ChevronRight, Settings, Mail, Clock, CreditCard, Star } from "lucide-react";
+import { User, LogOut, Shield, ChevronRight, Settings, Clock, CreditCard, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /**

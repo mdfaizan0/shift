@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import { configureLeafletIcons } from "@/lib/leaflet";
 import { MAP_CONFIG } from "@/features/map/map.constants";

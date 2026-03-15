@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, IndianRupee, Clock, ArrowRight, Loader2, X } from "lucide-react";
+import { IndianRupee, Clock, ArrowRight, Loader2, X } from "lucide-react";
 import { calculateTimeLeft, formatTime } from "./dispatch.utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 /**
  * RideOfferCard is a concise, non-blocking component to display a ride request.

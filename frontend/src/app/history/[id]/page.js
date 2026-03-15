@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { rideService } from "@/services/ride.service";
@@ -14,12 +14,10 @@ import {
     Calendar,
     Clock,
     IndianRupee,
-    CreditCard,
     Download,
     Star,
     ShieldCheck,
-    MapPin,
-    Navigation2
+    MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 

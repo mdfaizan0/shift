@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import api, { setTokenGetter } from "@/lib/api";
 
@@ -24,13 +24,10 @@ export const AuthProvider = ({ children }) => {
     }, [getToken]);
 
     const fetchUserProfile = useCallback(async () => {
-        // Guard against concurrent/re-entrant calls
         if (fetchingRef.current) return;
         fetchingRef.current = true;
 
         try {
-            // skipToast prevents error toasts from triggering re-renders
-            // that would cause the effect to re-fire and loop infinitely
             const response = await api.get("/users/me", { skipToast: true });
             if (response.data.success) {
                 const userData = response.data.user;

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MapPin, IndianRupee, Navigation, Phone, CheckCircle2, XCircle, Loader2, Clock, Star } from "lucide-react";
+import { IndianRupee, Navigation, Phone, CheckCircle2, Loader2, Clock, Star } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { rideService } from "@/services/ride.service";
 import { toast } from "sonner";
@@ -128,7 +128,7 @@ export default function ActiveRideCard({ ride, routeInfo }) {
             const res = await rideService.markPaid(ride.id);
             if (res.success) {
                 toast.success("Payment marked as received.");
-                setActiveRide(null); // Now completely done
+                setActiveRide(null);
                 refreshStats();
             }
         } catch (error) {

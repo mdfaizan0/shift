@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import ProfilePage from "@/features/profile/ProfilePage";
 
 export default function Profile() {

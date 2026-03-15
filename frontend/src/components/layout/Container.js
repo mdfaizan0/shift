@@ -1,9 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * Container component to constrain page width and maintain consistent spacing.
- */
 const Container = ({ children, className, ...props }) => {
     return (
         <div

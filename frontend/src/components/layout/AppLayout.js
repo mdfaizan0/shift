@@ -2,10 +2,6 @@ import { Toaster } from "@/components/ui/sonner";
 import BottomNav from "../BottomNav";
 import Navbar from "./Navbar";
 
-/**
- * AppLayout component that wraps the entire application.
- * Provides the global navigation and consistent content area.
- */
 const AppLayout = ({ children }) => {
     return (
         <div className="relative flex min-h-screen flex-col bg-background">

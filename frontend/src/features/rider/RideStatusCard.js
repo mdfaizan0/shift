@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Car, Clock, ShieldCheck, User, MapPin, IndianRupee, CreditCard, Star, Loader2, CheckCircle2 } from "lucide-react";
+import { Car, Clock, User, IndianRupee, CreditCard, Star, Loader2, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { rideService } from "@/services/ride.service";
 import { toast } from "sonner";

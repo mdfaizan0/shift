@@ -46,8 +46,6 @@ api.interceptors.response.use(
             const requestUrl = error.config?.url || "";
             console.error("Unauthorized request:", requestUrl);
 
-            // Only fire the go-offline call for non-auth endpoints
-            // to avoid cascading on the initial profile fetch
             if (!requestUrl.includes("/users/me") && _getToken) {
                 try {
                     const token = await _getToken();

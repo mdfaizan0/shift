@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { driverService } from "@/services/driver.service";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { realtimeService } from "@/lib/realtime";
@@ -163,7 +163,6 @@ export const DriverProvider = ({ children }) => {
 
         initAndTrackStatus();
 
-        // No more browser event listeners or unmount cleanups for offline
         return () => {
             mountedRef.current = false;
         };

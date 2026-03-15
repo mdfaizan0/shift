@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { rideService } from "@/services/ride.service";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, MapPin, IndianRupee, ChevronRight, History } from "lucide-react";
+import { ArrowLeft, Clock, IndianRupee, ChevronRight, History } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";

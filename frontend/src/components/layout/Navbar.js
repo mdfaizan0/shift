@@ -16,9 +16,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, LogOut, User, Map as MapIcon, Sun, Moon, Car } from "lucide-react";
+import { LogOut, User, Map as MapIcon, Sun, Moon, Car } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const ThemeToggle = () => {
     const { resolvedTheme, setTheme } = useTheme();
@@ -93,7 +92,6 @@ const Navbar = () => {
 
     const handleSignOut = async () => {
         try {
-            // If the user is a driver, mark them offline first
             if (role === "DRIVER") {
                 const { driverService } = await import("@/services/driver.service");
                 await driverService.goOffline();
@@ -101,7 +99,6 @@ const Navbar = () => {
             await signOut({ redirectUrl: '/login' });
         } catch (error) {
             console.error("Logout failed:", error);
-            // Fallback to normal sign out
             await signOut({ redirectUrl: '/login' });
         }
     };

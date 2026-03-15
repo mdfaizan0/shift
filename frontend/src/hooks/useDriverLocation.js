@@ -9,13 +9,12 @@ export const useDriverLocation = (isOnline) => {
     const watchId = useRef(null);
     const lastUpdateRef = useRef(0);
     const [currentLocation, setCurrentLocation] = useState(null);
-    const UPDATE_INTERVAL = 5000; // 5 seconds
+    const UPDATE_INTERVAL = 5000;
 
     const sendUpdate = async (position, isManual = false) => {
         const now = Date.now();
         const { latitude, longitude } = position.coords;
         setCurrentLocation({ lat: latitude, lng: longitude });
-        // Update if it's manual, first one, or throttled by 5s
         if (isManual || now - lastUpdateRef.current >= UPDATE_INTERVAL || lastUpdateRef.current === 0) {
             try {
                 await driverService.locationUpdate({

@@ -6,10 +6,6 @@ import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Container from "@/components/layout/Container";
 
-/**
- * Higher-order component to protect routes that require authentication.
- * Also handles redirecting authenticated users away from public-only routes (login/register).
- */
 const AuthGuard = ({ children, publicOnly = false }) => {
     const { user, isLoading } = useAuthUser();
     const router = useRouter();
@@ -36,7 +32,6 @@ const AuthGuard = ({ children, publicOnly = false }) => {
         );
     }
 
-    // Prevent flicker before redirect
     if (!user && !publicOnly && pathname !== "/login" && pathname !== "/register") {
         return null;
     }

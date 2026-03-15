@@ -728,8 +728,6 @@ export async function reviewRide(req, res) {
 export async function getRideHistory(req, res) {
     const { as: role } = req.params
     const userId = req.user.id
-    console.log("role", role)
-    console.log("userId", userId)
 
     if (!["rider", "driver"].includes(role)) {
         return res.status(400).json({ success: false, message: "Query parameter 'as' must be either 'rider' or 'driver'" })

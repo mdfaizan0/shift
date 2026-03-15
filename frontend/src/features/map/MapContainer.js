@@ -48,8 +48,6 @@ const MapContainer = ({
     const [driverBearing, setDriverBearing] = React.useState(0);
     const driverAnimRef = React.useRef(null);
 
-    // Sync smooth location with initialDriverLocation (used on driver side where
-    // the driver's own geolocation is passed directly, not via realtime subscription)
     React.useEffect(() => {
         if (initialDriverLocation && !isPreview) {
             if (smoothDriverLoc && (smoothDriverLoc.lat !== initialDriverLocation.lat || smoothDriverLoc.lng !== initialDriverLocation.lng)) {
